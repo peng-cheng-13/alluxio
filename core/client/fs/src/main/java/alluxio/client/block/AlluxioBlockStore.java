@@ -157,7 +157,7 @@ public final class AlluxioBlockStore {
    */
   public BlockInStream getInStream(long blockId, InStreamOptions options,
       Map<WorkerNetAddress, Long> failedWorkers) throws IOException {
-    String log = "/tmp/alluxio/shortcurcuit/" + blockId + "-" + UUID.randomUUID();
+    String log = "/tmp/alluxio/shortcircuit/" + blockId + "-" + UUID.randomUUID();
     write(log, "Getting instream for block " + blockId);
     // Get the latest block info from master
     BlockInfo info;
@@ -243,7 +243,7 @@ public final class AlluxioBlockStore {
   private static void write(String log, String message) {
     try {
       BufferedWriter logger = new BufferedWriter(new FileWriter(log, true));
-      logger.write(message);
+      logger.write(message + "\n");
       logger.close();
     } catch (IOException e) {
       throw new RuntimeException(e);
