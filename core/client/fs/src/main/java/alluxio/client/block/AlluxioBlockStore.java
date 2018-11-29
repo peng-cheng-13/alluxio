@@ -157,9 +157,8 @@ public final class AlluxioBlockStore {
    */
   public BlockInStream getInStream(long blockId, InStreamOptions options,
       Map<WorkerNetAddress, Long> failedWorkers) throws IOException {
-    BufferedWriter logger = new BufferedWriter(
-        new FileWriter("/tmp/alluxio/shortcurcuit/" + blockId + "-" + UUID.randomUUID(), true));
-    logger.write("Getting instream for block " + blockId);
+    String log = "/tmp/alluxio/shortcurcuit/" + blockId + "-" + UUID.randomUUID();
+    write(log, "Getting instream for block " + blockId);
     // Get the latest block info from master
     BlockInfo info;
     try (CloseableResource<BlockMasterClient> masterClientResource =
@@ -167,7 +166,7 @@ public final class AlluxioBlockStore {
       info = masterClientResource.get().getBlockInfo(blockId);
     }
     List<BlockLocation> locations = info.getLocations();
-    logger.write("Locations: " + locations);
+    write(log, "Locations: " + locations);
 
     List<BlockWorkerInfo> blockWorkerInfo = Collections.EMPTY_LIST;
     // Initial target workers to read the block given the block locations.
@@ -178,19 +177,19 @@ public final class AlluxioBlockStore {
     } else {
       workerPool = locations.stream().map(BlockLocation::getWorkerAddress).collect(toSet());
     }
-    logger.write("Worker Pool: " + workerPool);
+    write(log, "Worker Pool: " + workerPool);
     if (workerPool.isEmpty()) {
       throw new NotFoundException(ExceptionMessage.BLOCK_UNAVAILABLE.getMessage(info.getBlockId()));
     }
     // Workers to read the block, after considering failed workers.
     Set<WorkerNetAddress> workers = handleFailedWorkers(workerPool, failedWorkers);
-    logger.write("After handling failed workers: " + workers);
+    write(log, "After handling failed workers: " + workers);
     // TODO(calvin): Consider containing these two variables in one object
     BlockInStreamSource dataSourceType = null;
     WorkerNetAddress dataSource = null;
     locations = locations.stream()
         .filter(location -> workers.contains(location.getWorkerAddress())).collect(toList());
-    logger.write("Filtered locations: " + locations);
+    write(log, "Filtered locations: " + locations);
     // First try to read data from Alluxio
     if (!locations.isEmpty()) {
       // TODO(calvin): Get location via a policy
@@ -202,19 +201,19 @@ public final class AlluxioBlockStore {
       if (nearest.isPresent()) {
         dataSource = locations.stream().map(BlockLocation::getWorkerAddress)
             .filter(addr -> addr.getTieredIdentity().equals(nearest.get())).findFirst().get();
-        logger.write("Our tiered identity: " + mTieredIdentity);
-        logger.write("Nearest tiered identity: " + nearest.get());
+        write(log, "Our tiered identity: " + mTieredIdentity);
+        write(log, "Nearest tiered identity: " + nearest.get());
         if (mTieredIdentity.getTier(0).getTierName().equals(Constants.LOCALITY_NODE)
             && mTieredIdentity.topTiersMatch(nearest.get())) {
           dataSourceType = BlockInStreamSource.LOCAL;
-          logger.write("LOCAL data source is  " + nearest.get());
+          write(log, "LOCAL data source is  " + nearest.get());
         } else {
           dataSourceType = BlockInStreamSource.REMOTE;
-          logger.write("REMOTE data source is  " + nearest.get());
+          write(log, "REMOTE data source is  " + nearest.get());
         }
       }
     }
-    logger.write("Block not found in alluxio");
+    write(log, "Block not found in alluxio");
     // Can't get data from Alluxio, get it from the UFS instead
     if (dataSource == null) {
       dataSourceType = BlockInStreamSource.UFS;
@@ -232,12 +231,22 @@ public final class AlluxioBlockStore {
     }
 
     try {
-      return BlockInStream.create(mContext, info, dataSource, dataSourceType, options, logger);
+      return BlockInStream.create(mContext, info, dataSource, dataSourceType, options, log);
     } catch (ConnectException e) {
       //When BlockInStream created failed, it will update the passed-in failedWorkers
       //to attempt to avoid reading from this failed worker in next try.
       failedWorkers.put(dataSource, System.currentTimeMillis());
       throw e;
+    }
+  }
+
+  private static void write(String log, String message) {
+    try {
+      BufferedWriter logger = new BufferedWriter(new FileWriter(log, true));
+      logger.write(message);
+      logger.close();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 
