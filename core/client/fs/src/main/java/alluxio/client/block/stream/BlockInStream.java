@@ -31,9 +31,11 @@ import alluxio.wire.BlockInfo;
 import alluxio.wire.WorkerNetAddress;
 
 import com.google.common.base.Preconditions;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -73,18 +75,22 @@ public class BlockInStream extends InputStream implements BoundedStream, Seekabl
   private boolean mClosed = false;
   private boolean mEOF = false;
 
+  public static BlockInStream create(FileSystemContext context, BlockInfo info,
+                                     WorkerNetAddress dataSource, BlockInStreamSource dataSourceType, InStreamOptions options)
+      throws IOException {
+    return create(context, info, dataSource, dataSourceType, options, null);
+  }
+
   /**
    * Creates a {@link BlockInStream}.
    *
    * One of several read behaviors:
    *
    * 1. Domain socket - if the data source is the local worker and the local worker has a domain
-   * socket server
-   * 2. Short-Circuit - if the data source is the local worker
-   * 3. Local Loopback Read - if the data source is the local worker and short circuit is disabled
-   * 4. Read from remote worker - if the data source is a remote worker
-   * 5. UFS Read from worker - if the data source is UFS, read from the UFS policy's designated
-   * worker (ufs -> local or remote worker -> client)
+   * socket server 2. Short-Circuit - if the data source is the local worker 3. Local Loopback Read
+   * - if the data source is the local worker and short circuit is disabled 4. Read from remote
+   * worker - if the data source is a remote worker 5. UFS Read from worker - if the data source is
+   * UFS, read from the UFS policy's designated worker (ufs -> local or remote worker -> client)
    *
    * @param context the file system context
    * @param info the block info
@@ -94,7 +100,8 @@ public class BlockInStream extends InputStream implements BoundedStream, Seekabl
    * @return the {@link BlockInStream} object
    */
   public static BlockInStream create(FileSystemContext context, BlockInfo info,
-      WorkerNetAddress dataSource, BlockInStreamSource dataSourceType, InStreamOptions options)
+      WorkerNetAddress dataSource, BlockInStreamSource dataSourceType, InStreamOptions options,
+      BufferedWriter logger)
       throws IOException {
     URIStatus status = options.getStatus();
     OpenFileOptions readOptions = options.getOptions();
@@ -114,19 +121,25 @@ public class BlockInStream extends InputStream implements BoundedStream, Seekabl
     boolean sourceSupportsDomainSocket = NettyUtils.isDomainSocketSupported(dataSource);
     boolean sourceIsLocal = dataSourceType == BlockInStreamSource.LOCAL;
 
+    logger.write("shortCircuit: " + shortCircuit);
+    logger.write("sourceSupportsDomainSocket: " + sourceSupportsDomainSocket);
+    logger.write("sourceIsLocal: " + sourceIsLocal);
+
     // Short circuit
     if (sourceIsLocal && shortCircuit && !sourceSupportsDomainSocket) {
       LOG.debug("Creating short circuit input stream for block {} @ {}", blockId, dataSource);
+      logger.write("Short Circuit!");
       try {
         return createLocalBlockInStream(context, dataSource, blockId, blockSize, options);
       } catch (NotFoundException e) {
+        logger.write("Failed to create short circuit: " + ExceptionUtils.getFullStackTrace(e));
         // Failed to do short circuit read because the block is not available in Alluxio.
         // We will try to read via netty. So this exception is ignored.
         LOG.warn("Failed to create short circuit input stream for block {} @ {}. Falling back to "
             + "network transfer", blockId, dataSource);
       }
     }
-
+    logger.write("Creating netty stream");
     // Netty
     LOG.debug("Creating netty input stream for block {} @ {} from client {} reading through {}",
         blockId, dataSource, NetworkAddressUtils.getClientHostName(), dataSource);
