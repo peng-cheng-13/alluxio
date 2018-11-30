@@ -38,6 +38,8 @@ import alluxio.util.executor.ExecutorServiceFactory;
 import com.codahale.metrics.Gauge;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.thrift.TProcessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.time.Clock;
@@ -54,6 +56,8 @@ import java.util.Set;
  * Default implementation of the metrics master.
  */
 public class DefaultMetricsMaster extends AbstractMaster implements MetricsMaster {
+  private static final Logger LOG = LoggerFactory.getLogger(DefaultMetricsMaster.class);
+
   private final Map<String, MetricsAggregator> mMetricsAggregatorRegistry = new HashMap<>();
   private final Set<MultiValueMetricsAggregator> mMultiValueMetricsAggregatorRegistry =
       new HashSet<>();
@@ -97,9 +101,12 @@ public class DefaultMetricsMaster extends AbstractMaster implements MetricsMaste
           @Override
           public Object getValue() {
             Map<MetricsFilter, Set<Metric>> metrics = new HashMap<>();
+            LOG.debug("Aggregating metrics for {}", aggregator.getName());
             for (MetricsFilter filter : aggregator.getFilters()) {
-              metrics.put(filter, mMetricsStore
-                  .getMetricsByInstanceTypeAndName(filter.getInstanceType(), filter.getName()));
+              Set<Metric> values = mMetricsStore
+                  .getMetricsByInstanceTypeAndName(filter.getInstanceType(), filter.getName());
+              LOG.debug("Values for {}-{}: {}", filter.getInstanceType(), filter.getName(), values);
+              metrics.put(filter, values);
             }
             return aggregator.getValue(metrics);
           }
