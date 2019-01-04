@@ -71,20 +71,20 @@ public final class SetAttributeOptions {
     mMode = options.isSetMode() ? options.getMode() : Constants.INVALID_MODE;
     mRecursive = options.isRecursive();
     mOperationTimeMs = System.currentTimeMillis();
-    if (options.getIndexInfo_BlockId().size() != 0) {
+    if (options.getMIndexInfo_BlockId() != null) {
       mShouldindex = true;
-      mBlockIndexBid = options.getIndexInfo_BlockId();
-      mBlockIndexMax = options.getIndexInfo_Max();
-      mBlockIndexMin = options.getIndexInfo_Min();
-      mBlockIndexVar = options.getIndexInfo_VarName();
-      mBlockAugIndex = options.getAugIndex();
+      mBlockIndexBid = options.getMIndexInfo_BlockId();
+      mBlockIndexMax = options.getMIndexInfo_MaxValue();
+      mBlockIndexMin = options.getMIndexInfo_MinValue();
+      mBlockIndexVar = options.getMIndexInfo_VarName();
+      mBlockAugIndex = options.getMAugIndex();
     }
-    if (options.getUDM_Key().size() != 0) {
+    if (options.getMUKey() != null) {
       mUDM = true;
-      mPath = options.getUDM_Path();
-      mUKey = options.getUDM_Key();
-      mUValue = options.getUDM_Value();
-      mDeleteAttribute = options.deleteUDM();
+      mPath = options.getMPath();
+      mUKey = options.getMUKey();
+      mUValue = options.getMUValue();
+      mDeleteAttribute = options.mDeleteAttribute;
     }
   }
 

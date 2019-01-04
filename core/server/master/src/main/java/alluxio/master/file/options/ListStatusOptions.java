@@ -58,11 +58,11 @@ public final class ListStatusOptions {
     } else if (!options.isLoadDirectChildren()) {
       mLoadMetadataType = LoadMetadataType.Never;
     }
-    if (options.getUKey() != null) {
+    if (options.getMUKey() != null) {
       mUDM = true;
-      mUKey = options.getUKey();
-      mUValue = options.getUValue();
-      mSelectType = options.getSType();
+      mUKey = options.getMUKey();
+      mUValue = options.getMUValue();
+      mSelectType = options.getMSelectType();
     }
   }
 

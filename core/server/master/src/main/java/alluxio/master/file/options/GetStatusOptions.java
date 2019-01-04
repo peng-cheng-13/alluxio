@@ -51,10 +51,10 @@ public final class GetStatusOptions {
     if (options.isSetLoadMetadataType()) {
       mLoadMetadataType = LoadMetadataType.fromThrift(options.getLoadMetadataType());
     }
-    if (options.getIsQuery()) {
+    if (options.isIsQuery()) {
       //mQuery = true;
-      mQueryInfo = new QueryInfo(options.getQMax(), options.getQMin(), options.getVar(),
-          options.useAugmentedIndex());
+      mQueryInfo = new QueryInfo(options.getQuery_max(), options.getQuery_min(),
+          options.getVarname(), options.isQuery_augmented());
     }
   }
 

@@ -1071,7 +1071,7 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
       auditContext.setSrcInode(inode);
 
       List<FileInfo> ret = new ArrayList<>();
-      if (listStatusOptions.getUKey().size() != 0) { //Query Files
+      if (listStatusOptions.getUKey() != null) { //Query Files
         List<String> keylist = listStatusOptions.getUKey();
         List<String> valuelist = listStatusOptions.getUValue();
         List<String> typelist = listStatusOptions.getSType();

@@ -332,15 +332,23 @@ public final class SetAttributeOptions {
     }
 
     if (mShouldindex) {
-      options.setIndexInfo(mBlockIndexBid, mBlockIndexMax, mBlockIndexMin, mBlockIndexVar,
-          mBlockAugIndex);
+      options.setMIndexInfo_BlockId(mBlockIndexBid);
+      options.setMIndexInfo_MaxValue(mBlockIndexMax);
+      options.setMIndexInfo_MinValue(mBlockIndexMin);
+      options.setMIndexInfo_VarName(mBlockIndexVar);
+      options.setMAugIndex(mBlockAugIndex);
     }
 
     if (mUDM) {
       if (!mDeleteAttribute) {
-        options.setUDM(mPath, mUKey, mUValue);
+        options.setMPath(mPath);
+        options.setMUKey(mUKey);
+        options.setMUValue(mUValue);
       } else {
-        options.deleteUDM(mPath, mUKey, mUValue);
+        options.setMDeleteAttribute(true);
+        options.setMPath(mPath);
+        options.setMUKey(mUKey);
+        options.setMUValue(mUValue);
       }
     }
 

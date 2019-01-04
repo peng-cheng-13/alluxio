@@ -109,8 +109,11 @@ public final class GetStatusOptions {
     GetStatusTOptions options = new GetStatusTOptions();
     options.setLoadMetadataType(LoadMetadataType.toThrift(mLoadMetadataType));
     if (mQueryInfo != null) {
-      options.setQueryInfo(mQueryInfo.getVarName(), mQueryInfo.getMaxValue(),
-          mQueryInfo.getMinValue(), mQueryInfo.useAugmented());
+      options.setIsQuery(true);
+      options.setVarname(mQueryInfo.getVarName());
+      options.setQuery_max(mQueryInfo.getMaxValue());
+      options.setQuery_min(mQueryInfo.getMinValue());
+      options.setQuery_augmented(mQueryInfo.useAugmented());
     }
     return options;
   }

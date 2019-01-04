@@ -116,7 +116,9 @@ public final class ListStatusOptions {
     options.setLoadDirectChildren(
         mLoadMetadataType == LoadMetadataType.Once || mLoadMetadataType == LoadMetadataType.Always);
     if (mUDM) {
-      options.setQuery(mUKey, mUValue, mSelectType);
+      options.setMUKey(mUKey);
+      options.setMUValue(mUValue);
+      options.setMSelectType(mSelectType);
     }
 
     options.setLoadMetadataType(LoadMetadataType.toThrift(mLoadMetadataType));
