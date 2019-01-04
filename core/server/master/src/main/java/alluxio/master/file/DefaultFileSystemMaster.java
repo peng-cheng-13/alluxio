@@ -75,6 +75,7 @@ import alluxio.master.file.options.SetAttributeOptions;
 import alluxio.master.journal.JournalContext;
 import alluxio.master.journal.JournalSystem;
 import alluxio.master.journal.NoopJournalContext;
+import alluxio.master.journal.ufs.JavaSerializer;
 import alluxio.metrics.MetricsSystem;
 import alluxio.proto.journal.File.AddMountPointEntry;
 import alluxio.proto.journal.File.AsyncPersistRequestEntry;
@@ -123,6 +124,7 @@ import alluxio.wire.LoadMetadataType;
 import alluxio.wire.MountPointInfo;
 import alluxio.wire.TtlAction;
 import alluxio.wire.WorkerInfo;
+import alluxio.wire.IndexInfo;
 
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Gauge;
@@ -137,6 +139,7 @@ import org.apache.thrift.TProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -274,6 +277,11 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
    * (D) cannot call (D)
    */
 
+  /** Handle the block index info. */
+  private KratiDataStore mBlockIndexStore = null;
+  private HashStore mValueStore = null;
+  private HashStore mPathStore = null;
+
   /** Handle to the block master. */
   private final BlockMaster mBlockMaster;
 
@@ -303,6 +311,12 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
 
   /** This caches absent paths in the UFS. */
   private final UfsAbsentPathCache mUfsAbsentPathCache;
+
+  /** The file length from query result. */
+  private HashMap<String, Long> mQueryLength = new HashMap<String, Long>();
+
+  /** Serializer that transforms entry to byte array.*/
+  private JavaSerializer mSerializer;
 
   /**
    * The service that checks for inode files with ttl set. We store it here so that it can be
@@ -346,7 +360,17 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
   DefaultFileSystemMaster(BlockMaster blockMaster, JournalSystem journalSystem,
       ExecutorServiceFactory executorServiceFactory) {
     super(journalSystem, new SystemClock(), executorServiceFactory);
-
+    File targetfile;
+    try {
+      String storepath = Configuration.get(PropertyKey.MASTER_JOURNAL_FOLDER);
+      targetfile = new File(storepath.concat("/BlockIndexStore"));
+      mBlockIndexStore = new KratiDataStore(targetfile, 10240);
+      mValueStore = new HashStore(new File(storepath.concat("/ValueStore")), 10240);
+      mPathStore = new HashStore(new File(storepath.concat("/PathStore")), 10240);
+      mSerializer = new JavaSerializer<HashMap>();
+    } catch (Exception e) {
+      LOG.warn("Get KratiDataStore failed.", e);
+    }
     mBlockMaster = blockMaster;
     mDirectoryIdGenerator = new InodeDirectoryIdGenerator(mBlockMaster);
     mUfsManager = new MasterUfsManager();
@@ -355,6 +379,8 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
 
     // TODO(gene): Handle default config value for whitelist.
     mWhitelist = new PrefixList(Configuration.getList(PropertyKey.MASTER_WHITELIST, ","));
+
+    mQueryLength = new HashMap<>();
 
     mAsyncPersistHandler = AsyncPersistHandler.Factory.create(new FileSystemMasterView(this));
     mPermissionChecker = new PermissionChecker(mInodeTree);
@@ -389,6 +415,7 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
   @Override
   public void processJournalEntry(JournalEntry entry) throws IOException {
     if (entry.hasInodeFile()) {
+      //LOG.info("Metadata Test: Add file entry once");
       mInodeTree.addInodeFileFromJournal(entry.getInodeFile());
       // Add the file to TTL buckets, the insert automatically rejects files w/ Constants.NO_TTL
       InodeFileEntry inodeFileEntry = entry.getInodeFile();
@@ -407,39 +434,6 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
       } catch (AccessControlException e) {
         throw new RuntimeException(e);
       }
-    } else if (entry.hasInodeLastModificationTime()) {
-      InodeLastModificationTimeEntry modTimeEntry = entry.getInodeLastModificationTime();
-      try (LockedInodePath inodePath = mInodeTree
-          .lockFullInodePath(modTimeEntry.getId(), InodeTree.LockMode.WRITE)) {
-        inodePath.getInode()
-            .setLastModificationTimeMs(modTimeEntry.getLastModificationTimeMs(), true);
-      } catch (FileDoesNotExistException e) {
-        throw new RuntimeException(e);
-      }
-    } else if (entry.hasPersistDirectory()) {
-      PersistDirectoryEntry typedEntry = entry.getPersistDirectory();
-      try (LockedInodePath inodePath = mInodeTree
-          .lockFullInodePath(typedEntry.getId(), InodeTree.LockMode.WRITE)) {
-        inodePath.getInode().setPersistenceState(PersistenceState.PERSISTED);
-      } catch (FileDoesNotExistException e) {
-        throw new RuntimeException(e);
-      }
-    } else if (entry.hasCompleteFile()) {
-      try {
-        completeFileFromEntry(entry.getCompleteFile());
-      } catch (InvalidPathException | InvalidFileSizeException | FileAlreadyCompletedException e) {
-        throw new RuntimeException(e);
-      }
-    } else if (entry.hasSetAttribute()) {
-      try {
-        setAttributeFromEntry(entry.getSetAttribute());
-      } catch (AccessControlException | FileDoesNotExistException | InvalidPathException e) {
-        throw new RuntimeException(e);
-      }
-    } else if (entry.hasDeleteFile()) {
-      deleteFromEntry(entry.getDeleteFile());
-    } else if (entry.hasRename()) {
-      renameFromEntry(entry.getRename());
     } else if (entry.hasInodeDirectoryIdGenerator()) {
       mDirectoryIdGenerator.initFromJournalEntry(entry.getInodeDirectoryIdGenerator());
     } else if (entry.hasReinitializeFile()) {
@@ -450,9 +444,37 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
       } catch (FileAlreadyExistsException | InvalidPathException e) {
         throw new RuntimeException(e);
       }
-    } else if (entry.hasDeleteMountPoint()) {
-      unmountFromEntry(entry.getDeleteMountPoint());
-    } else if (entry.hasAsyncPersistRequest()) {
+    }
+    if (entry.hasInodeLastModificationTime()) {
+      InodeLastModificationTimeEntry modTimeEntry = entry.getInodeLastModificationTime();
+      try (LockedInodePath inodePath = mInodeTree
+          .lockFullInodePath(modTimeEntry.getId(), InodeTree.LockMode.WRITE)) {
+        inodePath.getInode()
+            .setLastModificationTimeMs(modTimeEntry.getLastModificationTimeMs(), true);
+      } catch (FileDoesNotExistException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    if (entry.hasPersistDirectory()) {
+      PersistDirectoryEntry typedEntry = entry.getPersistDirectory();
+      try (LockedInodePath inodePath = mInodeTree
+          .lockFullInodePath(typedEntry.getId(), InodeTree.LockMode.WRITE)) {
+        inodePath.getInode().setPersistenceState(PersistenceState.PERSISTED);
+      } catch (FileDoesNotExistException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    if (entry.hasCompleteFile()) {
+      try {
+        completeFileFromEntry(entry.getCompleteFile());
+      } catch (InvalidPathException | InvalidFileSizeException | FileAlreadyCompletedException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    if (entry.hasRename()) {
+      renameFromEntry(entry.getRename());
+    }
+    if (entry.hasAsyncPersistRequest()) {
       try {
         long fileId = (entry.getAsyncPersistRequest()).getFileId();
         try (LockedInodePath inodePath = mInodeTree
@@ -466,8 +488,16 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
         // longer be in the memory
         LOG.error(e.getMessage());
       }
-    } else {
-      throw new IOException(ExceptionMessage.UNEXPECTED_JOURNAL_ENTRY.getMessage(entry));
+    }
+    if (entry.hasSetAttribute()) {
+      try {
+        setAttributeFromEntry(entry.getSetAttribute());
+      } catch (AccessControlException | FileDoesNotExistException | InvalidPathException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    if (entry.hasUDM()) {
+      LOG.info("BD Test: Entry has UDM");
     }
   }
 
@@ -745,10 +775,210 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
             LoadMetadataOptions.defaults().setCreateAncestors(true), journalContext);
         ensureFullPathAndUpdateCache(inodePath);
       }
-      FileInfo fileInfo = getFileInfoInternal(inodePath);
+      FileInfo fileInfo = null;
+      if (options.getQueryInfo() != null) {
+        String var = options.getQueryInfo().getVarName();
+        double max = options.getQueryInfo().getMaxValue();
+        double min = options.getQueryInfo().getMinValue();
+        boolean augmented = options.getQueryInfo().useAugmented();
+        LOG.info("Query condition: varname: {}, maxvalue: {}, minvalue: {}, Augmented index: {}",
+            var, max, min, augmented);
+        fileInfo = queryFileInfoInternal(inodePath, var, max, min, augmented);
+      } else {
+        fileInfo = getFileInfoInternal(inodePath);
+      }
       auditContext.setSrcInode(inodePath.getInode()).setSucceeded(true);
       return fileInfo;
     }
+  }
+
+ /**
+  * @param inodePath the {@link LockedInodePath} to get the {@link FileInfo} for
+  * @param var thr var name to query
+  * @param max the max value to query
+  * @param min the min value to query
+  * @param augmented whether to use augmented index
+  * @return the {@link FileInfo} for the given inode
+  * @throws FileDoesNotExistException if the file does not exist
+  * @throws AccessControlException if permission denied
+  */
+  private FileInfo queryFileInfoInternal(LockedInodePath inodePath, String var, double max,
+      double min, boolean augmented) throws FileDoesNotExistException, AccessControlException {
+    Inode<?> inode = inodePath.getInode();
+    AlluxioURI uri = inodePath.getUri();
+    FileInfo fileInfo = inode.generateClientFileInfo(uri.toString());
+    fileInfo.setInMemoryPercentage(getInMemoryPercentage(inode));
+    fileInfo.setInAlluxioPercentage(getInAlluxioPercentage(inode));
+    boolean isPersisted = fileInfo.isPersisted();
+    if (inode instanceof InodeFile) {
+      try {
+        LOG.info("inode is instanceof InodeFile");
+        fileInfo.setFileBlockInfos(queryFileBlockInfoListInternal(inodePath,
+            isPersisted, var, max, min));
+        fileInfo.setBlockIds(queryFileBlockIdList(inodePath, var, max, min, augmented));
+      } catch (InvalidPathException e) {
+        throw new FileDoesNotExistException(e.getMessage(), e);
+      }
+    }
+    MountTable.Resolution resolution;
+    try {
+      resolution = mMountTable.resolve(uri);
+    } catch (InvalidPathException e) {
+      throw new FileDoesNotExistException(e.getMessage(), e);
+    }
+    AlluxioURI resolvedUri = resolution.getUri();
+    fileInfo.setUfsPath(resolvedUri.toString());
+    fileInfo.setMountId(resolution.getMountId());
+    // Set the query file length
+    String tmpkey = inodePath.getUri().toString();
+    if (mQueryLength.containsKey(tmpkey)) {
+      long tmplength = mQueryLength.get(tmpkey);
+      fileInfo.setLength(tmplength);
+      LOG.info("Set query file {} with new length {}", tmpkey, tmplength);
+      mQueryLength.remove(tmpkey);
+    }
+    Metrics.FILE_INFOS_GOT.inc();
+    return fileInfo;
+  }
+
+  /**
+   * @param inodePath the {@link LockedInodePath} to get the info for
+   * @param isPersisted whether file is persisted
+   * @param var thr var name to query
+   * @param max the max value to query
+   * @param min the min value to query
+   * @return a list of {@link FileBlockInfo} for all the blocks of the given inode
+   * @throws InvalidPathException if the path of the given file is invalid
+   */
+  private List<FileBlockInfo> queryFileBlockInfoListInternal(LockedInodePath inodePath,
+      boolean isPersisted, String var, double max,
+          double min) throws InvalidPathException, FileDoesNotExistException {
+    String mkey;
+    long blockid;
+    long querylength = 0;
+    IndexInfo mBlockIndex;
+    InodeFile file = inodePath.getInodeFile();
+    HashMap<String, IndexInfo> blockIndexs = file.getBlockIndexs();
+    List<BlockInfo> blockInfoList = mBlockMaster.getBlockInfoList(file.getBlockIds());
+    List<FileBlockInfo> ret = new ArrayList<>();
+    for (BlockInfo blockInfo : blockInfoList) {
+      blockid = blockInfo.getBlockId();
+      mkey = (Long.toString(blockid)).concat(var);
+      //mBlockIndex = blockIndexs.get(mkey);
+      mBlockIndex = mBlockIndexStore.get(mkey);
+      if (mBlockIndex == null) {
+        LOG.info("Cureent block list contains no var: {} info", var);
+        break;
+      }
+      if (isPersisted) {
+        querylength += blockInfo.getLength();
+        ret.add(generateFileBlockInfo(inodePath, blockInfo));
+      } else {
+        if (mBlockIndex.getMaxValue() >= min && mBlockIndex.getMinValue() <= max) {
+          querylength += blockInfo.getLength();
+          ret.add(generateFileBlockInfo(inodePath, blockInfo));
+        }
+      }
+    }
+    String tmpkey = inodePath.getUri().toString();
+    //if (!mQueryLength.containsKey(tmpkey)) {
+    mQueryLength.put(tmpkey, querylength);
+    //}
+    // Not implemented : Ask worker to query the block
+    return ret;
+  }
+
+  /**
+   * Set block ID info.
+   * @param inodePath the {@link LockedInodePath} to get the info for
+   * @param var thr var name to query
+   * @param max the max value to query
+   * @param min the min value to query
+   * @param augmented whether to use augmented index
+   * @return a list of {@link FileBlockInfo} for all the blocks of the given inode
+   * @throws InvalidPathException if the path of the given file is invalid
+   */
+  private List<Long> queryFileBlockIdList(LockedInodePath inodePath,
+      String var, double max, double min, boolean augmented)
+          throws InvalidPathException, FileDoesNotExistException {
+    String mkey;
+    long blockid;
+    long querylength = 0;
+    double firstmin = 0;
+    double firstmax = 0;
+    double range = 1;
+    boolean firstBlock = true;
+    long tmpbitmap = 0x0000000000000000L;
+    IndexInfo mBlockIndex;
+    InodeFile file = inodePath.getInodeFile();
+    //HashMap<String, IndexInfo> blockIndexs = file.getBlockIndexs();
+    List<BlockInfo> blockInfoList = mBlockMaster.getBlockInfoList(file.getBlockIds());
+    List<Long> ret = new ArrayList<>();
+    for (BlockInfo blockInfo : blockInfoList) {
+      blockid = blockInfo.getBlockId();
+      mkey = (Long.toString(blockid)).concat(var);
+      //mBlockIndex = blockIndexs.get(mkey);
+      mBlockIndex = mBlockIndexStore.get(mkey);
+      if (mBlockIndex == null) {
+        LOG.info("Cureent block list contains no var: {} info", var);
+        break;
+      }
+      //Init augmented index info
+      if (firstBlock) {
+        firstmin = mBlockIndex.getMinValue();
+        firstmax = mBlockIndex.getMaxValue();
+        range = ((firstmax - firstmin) == 0) ? 1 : ((firstmax - firstmin) / 64);
+        firstBlock = false;
+      }
+      if (mBlockIndex != null) {
+        if (mBlockIndex.getBlockId() == blockid) {
+          LOG.info("Get Block index info");
+        } else {
+          LOG.info("Wrong block!!!");
+          //ret.add(generateFileBlockInfo(inodePath, blockInfo));
+          break;
+        }
+        if (mBlockIndex.getMaxValue() < min || mBlockIndex.getMinValue() > max) {
+          LOG.info("Block {} contains no value to satisfy the query", blockid);
+        } else {
+          //Augmented index
+          if (augmented) {
+            int t1 = ((min - firstmin) < 0) ? 63 :
+                (63 - (int) ((min - firstmin) / range));
+            int t2 = ((max - firstmin) < 0) ? 63 :
+                (63 - (int) ((max - firstmin) / range));
+            if (t1 < 0) {
+              t1 = 0;
+            }
+            if (t2 < 0) {
+              t2 = 0;
+            }
+            for (int i = t2; i <= t1; i++) {
+              tmpbitmap |= (1L << i);
+            }
+            if ((tmpbitmap & mBlockIndex.getBitmap()) != 0) {
+              LOG.info("Query range, t2: {}, t1: {}, bitmap: {}", t2, t1, tmpbitmap);
+              LOG.info("Block {} contains the value to satisfy the query, augmented index: {}",
+                  blockid, mBlockIndex.getBitmap());
+              querylength += blockInfo.getLength();
+              ret.add(blockid);
+            } else {
+              LOG.info("Query range, t2: {}, t1: {}, bitmap: {}", t2, t1, tmpbitmap);
+              LOG.info("Block {} contains no value to satisfy the query, augmented index: {}",
+                  blockid, mBlockIndex.getBitmap());
+            }
+          } else {
+            LOG.info("Block {} contains the value to satisfy the query", blockid);
+            querylength += blockInfo.getLength();
+            ret.add(blockid);
+          }
+        }
+      } else {
+        LOG.info("Get Block index info is null, BlockId is {}, query var name is {}",
+            blockid, var);
+      }
+    }
+    return ret;
   }
 
   /**
@@ -767,8 +997,21 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
     if (inode instanceof InodeFile) {
       try {
         fileInfo.setFileBlockInfos(getFileBlockInfoListInternal(inodePath));
+        //Add user defined metadata
+        InodeFile inodefile = inodePath.getInodeFile();
+        if (inodefile.getUDM().size() != 0) {
+          LOG.info("Get user defined metadata {}", inodefile.getUDM());
+          fileInfo.setUDM(inodefile.getUDM());
+        }
       } catch (InvalidPathException e) {
         throw new FileDoesNotExistException(e.getMessage(), e);
+      }
+    }
+    if (inode instanceof InodeDirectory) {
+      InodeDirectory inodedirectory = (InodeDirectory) inode;
+      if (inodedirectory.getUDM().size() != 0) {
+        LOG.info("Get user defined metadata {}", inodedirectory.getUDM());
+        fileInfo.setUDM(inodedirectory.getUDM());
       }
     }
     MountTable.Resolution resolution;
@@ -828,30 +1071,116 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
       auditContext.setSrcInode(inode);
 
       List<FileInfo> ret = new ArrayList<>();
-      if (inode.isDirectory()) {
-        TempInodePathForDescendant tempInodePath = new TempInodePathForDescendant(inodePath);
-        try {
-          mPermissionChecker.checkPermission(Mode.Bits.EXECUTE, inodePath);
-        } catch (AccessControlException e) {
-          auditContext.setAllowed(false);
-          throw e;
-        }
-        for (Inode<?> child : ((InodeDirectory) inode).getChildren()) {
-          child.lockReadAndCheckParent(inode);
+      if (listStatusOptions.getUKey().size() != 0) { //Query Files
+        List<String> keylist = listStatusOptions.getUKey();
+        List<String> valuelist = listStatusOptions.getUValue();
+        List<String> typelist = listStatusOptions.getSType();
+        LOG.info("Query files with key: {}, value: {}", keylist, valuelist);
+        if (inode.isDirectory()) {
+          TempInodePathForDescendant tempInodePath = new TempInodePathForDescendant(inodePath);
           try {
-            // the path to child for getPath should already be locked.
-            tempInodePath.setDescendant(child, mInodeTree.getPath(child));
-            ret.add(getFileInfoInternal(tempInodePath));
-          } finally {
-            child.unlockRead();
+            mPermissionChecker.checkPermission(Mode.Bits.EXECUTE, inodePath);
+          } catch (AccessControlException e) {
+            auditContext.setAllowed(false);
+            throw e;
+          }
+          for (Inode<?> child : ((InodeDirectory) inode).getChildren()) {
+            child.lockReadAndCheckParent(inode);
+            try {
+              // the path to child for getPath should already be locked.
+              tempInodePath.setDescendant(child, mInodeTree.getPath(child));
+              if (child.isDirectory() || queryUDM(child, keylist, valuelist, typelist)) {
+                ret.add(getFileInfoInternal(tempInodePath));
+              } else {
+                LOG.info("{} is not satisfied", child.getName());
+              }
+            } finally {
+              child.unlockRead();
+            }
+          }
+        } else {
+          if (queryUDM(inode, keylist, valuelist, typelist)) {
+            ret.add(getFileInfoInternal(inodePath));
+          } else {
+            LOG.info("{} is not satisfied", inode.getName());
           }
         }
-      } else {
-        ret.add(getFileInfoInternal(inodePath));
+      } else { //Normal actions
+        if (inode.isDirectory()) {
+          TempInodePathForDescendant tempInodePath = new TempInodePathForDescendant(inodePath);
+          try {
+            mPermissionChecker.checkPermission(Mode.Bits.EXECUTE, inodePath);
+          } catch (AccessControlException e) {
+            auditContext.setAllowed(false);
+            throw e;
+          }
+          for (Inode<?> child : ((InodeDirectory) inode).getChildren()) {
+            child.lockReadAndCheckParent(inode);
+            try {
+              // the path to child for getPath should already be locked.
+              tempInodePath.setDescendant(child, mInodeTree.getPath(child));
+              ret.add(getFileInfoInternal(tempInodePath));
+            } finally {
+              child.unlockRead();
+            }
+          }
+        } else {
+          ret.add(getFileInfoInternal(inodePath));
+        }
       }
       auditContext.setSucceeded(true);
       Metrics.FILE_INFOS_GOT.inc();
       return ret;
+    }
+  }
+
+  /**
+   * Check whether current inode can satisfy the query condition.
+   * @param tinode the target inode
+   * @param keylist the key of query condition
+   * @param valuelist the value of query condition
+   * @param typelist the type of query condition
+   */
+  private boolean queryUDM(Inode<?> tinode, List<String> keylist,
+      List<String> valuelist, List<String> typelist) {
+    int i;
+    String tvalue;
+    if (tinode instanceof InodeDirectory) {
+      //Check InodeDirectory
+      InodeDirectory inodedirectory = (InodeDirectory) tinode;
+      if (inodedirectory.getUDM() != null) {
+        for (i = 0; i < keylist.size(); i++) {
+          String tmpkey = keylist.get(i);
+          tvalue = inodedirectory.getUDM().get(tmpkey);
+          if (tvalue == null) {
+            continue;
+          }
+          if (!tvalue.equals(valuelist.get(i))) {
+            return false;
+          }
+        }
+        return true;
+      } else {
+        return true;
+      }
+    } else {
+      //Check InodeFile
+      InodeFile inodefile = (InodeFile) tinode;
+      if (inodefile.getUDM() != null) {
+        for (i = 0; i < keylist.size(); i++) {
+          String tmpkey = keylist.get(i);
+          tvalue = inodefile.getUDM().get(tmpkey);
+          if (tvalue == null) {
+            return false;
+          }
+          if (!tvalue.equals(valuelist.get(i))) {
+            return false;
+          }
+        }
+        return true;
+      } else {
+        return false;
+      }
     }
   }
 
@@ -1072,6 +1401,7 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
         long currLength = length;
         for (long blockId : inode.getBlockIds()) {
           long blockSize = Math.min(currLength, inode.getBlockSizeBytes());
+          LOG.info("DB Test: completeFileInternal, blockid {}, size {}", blockId, blockSize);
           mBlockMaster.commitBlockInUFS(blockId, blockSize);
           currLength -= blockSize;
         }
@@ -1442,12 +1772,13 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
         Inode delInode = delInodePair.getSecond();
         tempInodePath.setDescendant(delInode, delInodePair.getFirst());
         // Do not journal entries covered recursively for performance
-        if (delInode.getId() == inode.getId() || unsafeInodes.contains(delInode.getParentId())) {
+        mInodeTree.deleteInode(tempInodePath, opTimeMs, deleteOptions, journalContext);
+        /*if (delInode.getId() == inode.getId() || unsafeInodes.contains(delInode.getParentId())) {
           mInodeTree.deleteInode(tempInodePath, opTimeMs, deleteOptions, journalContext);
         } else {
           mInodeTree.deleteInode(tempInodePath, opTimeMs, deleteOptions,
               NoopJournalContext.INSTANCE);
-        }
+        }*/
       }
       if (!failedUris.isEmpty()) {
         throw new FailedPreconditionException(ExceptionMessage.DELETE_FAILED_DIRECTORY_NOT_IN_SYNC
@@ -2806,8 +3137,78 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
         throw e;
       }
       setAttributeAndJournal(inodePath, rootRequired, ownerRequired, options, journalContext);
+      //writeUDMValue(options);
+      //writeUDMPath(path, options);
+      //mValueStore.sync();
+      //mPathStore.sync();
       auditContext.setSucceeded(true);
     }
+  }
+
+  /**
+   * Write user-defined metadata of each file to Hash data base.
+   * @param options setAttribute options
+   */
+  public void writeUDMValue(SetAttributeOptions options) {
+    List<String> keylist = options.getUDMKey();
+    List<String> valuelist = options.getUDMValue();
+    try {
+      if (options.mDeleteAttribute) {
+        mValueStore.deleteUDMKey(keylist, valuelist);
+      } else {
+        mValueStore.putUDMKey(keylist, valuelist);
+      }
+      //mValueStore.sync();
+    } catch (Exception e) {
+      LOG.info("Write UDMValue failed");
+    }
+    LOG.info("Write UDMValue successed");
+  }
+
+  /**
+   * Write user-defined metadata to Hash data base.
+   * @param path the path of target file
+   * @param options setAttribute options
+   */
+  private void writeUDMPath(AlluxioURI path, SetAttributeOptions options) {
+    int i;
+    Set<String> pathset = new HashSet();
+    List<String> keylist = options.getUDMKey();
+    List<String> valuelist = options.getUDMValue();
+    //Add file path to pathset
+    try {
+      FileInfo currentinfo = getFileInfo(path, GetStatusOptions.defaults());
+      if (currentinfo.isFolder()) {
+        List<FileInfo> pathinfos = listStatus(path, ListStatusOptions.defaults());
+        for (FileInfo tmpinfo : pathinfos) {
+          if (tmpinfo.isFolder()) {
+            writeUDMPath(new AlluxioURI(tmpinfo.getPath()), options);
+          } else {
+            pathset.add(tmpinfo.getPath());
+          }
+        }
+      } else {
+        pathset.add(path.getPath());
+      }
+    //write to HashStore
+    //try {
+      for (i = 0; i < keylist.size(); i++) {
+        String tvalue = keylist.get(i).concat(valuelist.get(i));
+        if (options.mDeleteAttribute) {
+          mPathStore.deleteUDMPath(tvalue, pathset);
+        } else {
+          mPathStore.putUDMPath(tvalue, pathset);
+        }
+      }
+      //mPathStore.sync();
+    } catch (Exception e) {
+      LOG.info("Write UDMPath failed");
+    }
+    LOG.info("Write UDMPath successed");
+    //clean the data structure
+    pathset = null;
+    keylist = null;
+    valuelist = null;
   }
 
   /**
@@ -2904,7 +3305,36 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
     if (options.getMode() != Constants.INVALID_MODE) {
       builder.setPermission(options.getMode());
     }
-    appendJournalEntry(JournalEntry.newBuilder().setSetAttribute(builder).build(), journalContext);
+    //JournalEntry tmpentry = JournalEntry.newBuilder().setSetAttribute(builder).build();
+    if (options.mUDM) {
+      List<String> keylist = options.getUDMKey();
+      List<String> valuelist = options.getUDMValue();
+      int size = keylist.size();
+      HashMap<String, String> currnetUDM = new HashMap<String, String>();
+      Inode<?> inode = inodePath.getInode();
+      if (inode instanceof InodeFile) {
+        currnetUDM = ((InodeFile) inode).getUDM();
+      } else {
+        currnetUDM = ((InodeDirectory) inode).getUDM();
+      }
+      if (!options.mDeleteAttribute) {
+        for (int i = 0; i < size; i++) {
+          currnetUDM.put(keylist.get(i), valuelist.get(i));
+        }
+      } else {
+        for (int i = 0; i < size; i++) {
+          currnetUDM.remove(keylist.get(i));
+        }
+      }
+      alluxio.core.protobuf.com.google.protobuf.ByteString tmpbytes =
+          alluxio.core.protobuf.com.google.protobuf.ByteString.copyFrom(
+              mSerializer.serialize(currnetUDM));
+      builder.setUdm(tmpbytes);
+      LOG.info("DB Test: call setAttribute Entry setUDM {}", currnetUDM);
+      //tmpentry.setUDM(currnetUDM);
+    }
+    JournalEntry tmpentry = JournalEntry.newBuilder().setSetAttribute(builder).build();
+    appendJournalEntry(tmpentry, journalContext);
   }
 
   @Override
@@ -2994,6 +3424,74 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
         mTtlBuckets.insert(inode);
         inode.setLastModificationTimeMs(opTimeMs);
         inode.setTtlAction(options.getTtlAction());
+      }
+    }
+    if (options.mShouldindex) {
+      int i = 0;
+      List<Long> blockidlist = options.getBlockId();
+      List<Double> maxlist = options.getBlockMax();
+      List<Double> minlist = options.getBlockMin();
+      List<String> varlist = options.getBlockVar();
+      List<Long> auglist = options.getAugIndex();
+      long blockid;
+      double max;
+      double min;
+      long tmpbitmap;
+      String varname;
+      String mkey;
+      IndexInfo blockindex;
+      for (i = 0; i < maxlist.size(); i++) {
+        if (varlist == null) {
+          LOG.info("Varlist is null!");
+        }
+        blockid = blockidlist.get(i);
+        varname = varlist.get(i);
+        max = maxlist.get(i);
+        min = minlist.get(i);
+        tmpbitmap = auglist.get(i);
+        blockindex = new IndexInfo(blockid, max, min, varname);
+        blockindex.setBitmap(tmpbitmap);
+        LOG.info(
+            "Add Block index: BlockId: {}, VarName: {}, Maxvalue: {}, Minvalue: {}, Bitmap: {}",
+            blockid, varname, max, min, tmpbitmap);
+        mkey = (Long.toString(blockid)).concat(varname);
+        //((InodeFile) inode).addBlockIndex(mkey, blockindex);
+        try {
+          mBlockIndexStore.put(mkey, blockindex);
+        } catch (Exception e) {
+          LOG.warn("Insert KV to Hash data base failed.", e);
+        }
+      }
+      try {
+        mBlockIndexStore.sync();
+      } catch (Exception e) {
+        LOG.warn("Data base sync failed.", e);
+      }
+      LOG.info("Add Block index success");
+    } else {
+      LOG.info("Block index info is null");
+    }
+    if (options.mUDM) {
+      List<String> keylist = options.getUDMKey();
+      List<String> valuelist = options.getUDMValue();
+      if (inode instanceof InodeFile) {
+        if (!options.mDeleteAttribute) {
+          ((InodeFile) inode).addUDM(keylist, valuelist);
+          LOG.info("Add user-defined metadata : Key : {}, Value : {}", keylist, valuelist);
+        } else {
+          ((InodeFile) inode).deleteUDM(keylist);
+          LOG.info("Delete user-defined metadata : Key : {}, Value : {}", keylist, valuelist);
+        }
+      } else {
+        if (!options.mDeleteAttribute) {
+          ((InodeDirectory) inode).addUDM(keylist, valuelist);
+          LOG.info("Add user-defined metadata to directory: Key : {}, Value : {}",
+              keylist, valuelist);
+        } else {
+          ((InodeDirectory) inode).deleteUDM(keylist);
+          LOG.info("Delete user-defined metadata to directory: Key : {}, Value : {}",
+              keylist, valuelist);
+        }
       }
     }
     if (options.getPersisted() != null) {
@@ -3086,6 +3584,14 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
     }
     if (entry.hasPermission()) {
       options.setMode((short) entry.getPermission());
+    }
+    LOG.info("DB Test: Entry has UDM: {}", entry.hasUdm());
+    if (entry.hasUdm()) {
+      alluxio.core.protobuf.com.google.protobuf.ByteString tmpbytes = entry.getUdm();
+      HashMap<String, String> currentUDM =
+          (HashMap) mSerializer.deserialize(tmpbytes.toByteArray());
+      options.setUDM(currentUDM);
+      LOG.info("DB Test: Entry has UDM: {}", currentUDM);
     }
     try (LockedInodePath inodePath = mInodeTree
         .lockFullInodePath(entry.getId(), InodeTree.LockMode.WRITE)) {
