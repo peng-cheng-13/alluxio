@@ -141,7 +141,7 @@ final class UfsJournalLogWriter {
     mUfs = mJournal.getUfs();
     mNextSequenceNumber = nextSequenceNumber;
     mMaxLogSize = Configuration.getBytes(PropertyKey.MASTER_JOURNAL_LOG_SIZE_BYTES_MAX);
-
+    LOG.info("DB Test: Init UfsJournalLogWriter");
     mRotateLogForNextWrite = true;
     UfsJournalFile currentLog = UfsJournalSnapshot.getCurrentLog(mJournal);
     if (currentLog != null) {
@@ -155,7 +155,7 @@ final class UfsJournalLogWriter {
       throw new IOException(ExceptionMessage.JOURNAL_WRITE_AFTER_CLOSE.getMessage());
     }
     maybeRotateLog();
-
+    LOG.info("Metadata Test: write entry once");
     try {
       entry.toBuilder().setSequenceNumber(mNextSequenceNumber).build()
           .writeDelimitedTo(mJournalOutputStream.mOutputStream);
@@ -197,6 +197,7 @@ final class UfsJournalLogWriter {
       // There is nothing to flush.
       return;
     }
+    LOG.info("Metadata Test: flush once");
     DataOutputStream outputStream = mJournalOutputStream.mOutputStream;
     try {
       outputStream.flush();

@@ -16,6 +16,7 @@ import alluxio.PropertyKey;
 import alluxio.annotation.PublicApi;
 import alluxio.thrift.GetStatusTOptions;
 import alluxio.wire.LoadMetadataType;
+import alluxio.wire.QueryInfo;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -31,6 +32,7 @@ import javax.annotation.concurrent.NotThreadSafe;
 @JsonInclude(Include.NON_EMPTY)
 public final class GetStatusOptions {
   private LoadMetadataType mLoadMetadataType;
+  private QueryInfo mQueryInfo;
 
   /**
    * @return the default {@link GetStatusOptions}
@@ -42,6 +44,22 @@ public final class GetStatusOptions {
   private GetStatusOptions() {
     mLoadMetadataType =
         Configuration.getEnum(PropertyKey.USER_FILE_METADATA_LOAD_TYPE, LoadMetadataType.class);
+    mQueryInfo = null;
+  }
+
+  /**
+   * Set query info.
+   * @param queryinfo the query info
+   */
+  public void setQueryInfo(QueryInfo queryinfo) {
+    mQueryInfo = queryinfo;
+  }
+
+  /**
+   * @return the query info
+   */
+  public QueryInfo getQueryInfo() {
+    return mQueryInfo;
   }
 
   /**
@@ -90,6 +108,10 @@ public final class GetStatusOptions {
   public GetStatusTOptions toThrift() {
     GetStatusTOptions options = new GetStatusTOptions();
     options.setLoadMetadataType(LoadMetadataType.toThrift(mLoadMetadataType));
+    if (mQueryInfo != null) {
+      options.setQueryInfo(mQueryInfo.getVarName(), mQueryInfo.getMaxValue(),
+          mQueryInfo.getMinValue(), mQueryInfo.useAugmented());
+    }
     return options;
   }
 }

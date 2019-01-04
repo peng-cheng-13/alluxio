@@ -3,6 +3,8 @@
 
 package alluxio.proto.journal;
 
+import java.util.HashMap;
+
 public final class Journal {
   private Journal() {}
   public static void registerAllExtensions(
@@ -388,10 +390,16 @@ public final class Journal {
   public static final class JournalEntry extends
       com.google.protobuf.GeneratedMessage
       implements JournalEntryOrBuilder {
+
+    private boolean mDefinedUDM;
+    private java.util.HashMap mUDM;
+
     // Use JournalEntry.newBuilder() to construct.
     private JournalEntry(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
       this.unknownFields = builder.getUnknownFields();
+      mDefinedUDM = false;
+      mUDM = new HashMap<String, String>();
     }
     private JournalEntry(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
 
@@ -806,6 +814,30 @@ public final class Journal {
     // optional int64 sequence_number = 1;
     public static final int SEQUENCE_NUMBER_FIELD_NUMBER = 1;
     private long sequenceNumber_;
+
+
+    /**
+     * <code>optional java.util.HashMap mUDM = 10;</code>
+     */
+    public boolean hasUDM() {
+      return mDefinedUDM;
+    }
+
+    /**
+     * <code>optional java.util.HashMap mUDM = 10;</code>
+     */
+    public java.util.HashMap getUDM() {
+      return mUDM;
+    }
+
+    /**
+     * <code>optional java.util.HashMap mUDM = 10;</code>
+     */
+    public void setUDM(HashMap<String, String> value) {
+      mDefinedUDM = true;
+      mUDM = value;
+    }
+
     /**
      * <code>optional int64 sequence_number = 1;</code>
      */

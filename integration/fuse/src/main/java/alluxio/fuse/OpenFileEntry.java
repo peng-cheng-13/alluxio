@@ -31,14 +31,33 @@ import javax.annotation.concurrent.NotThreadSafe;
  */
 @NotThreadSafe
 final class OpenFileEntry implements Closeable {
-  private final FileInStream mIn;
-  private final FileOutStream mOut;
+  private FileInStream mIn;
+  private FileOutStream mOut;
+  public byte[] mIoArray;
+  public int mArrayLength;
 
   public OpenFileEntry(FileInStream in, FileOutStream out) {
     mIn = in;
     mOut = out;
+    mIoArray = new byte[2097152];
+    mArrayLength = 0;
   }
 
+  public byte[] getmIoArray() {
+    return mIoArray;
+  }
+
+  public int getmArrayLength() {
+    return mArrayLength;
+  }
+
+  public void setmIoArray(byte[] newarray) {
+    mIoArray = newarray;
+  }
+
+  public void setmArrayLength(int length) {
+    mArrayLength = length;
+  }
   /**
    * Gets the opened input stream for this open file entry. The value returned can be {@code null}
    * if the file is not open for reading.
@@ -59,17 +78,27 @@ final class OpenFileEntry implements Closeable {
     return mOut;
   }
 
+  public void addIn(FileInStream in) {
+    mIn = in;
+  }
+
+  public void addOut(FileOutStream out) {
+    mOut = out;
+  }
   /**
    * Closes the underlying open streams.
    */
   @Override
   public void close() throws IOException {
+    mIoArray = null;
     if (mIn != null) {
       mIn.close();
+      mIn = null;
     }
 
     if (mOut != null) {
       mOut.close();
+      mOut = null;
     }
   }
 }

@@ -12,7 +12,9 @@
 package alluxio.client.file;
 
 import alluxio.AlluxioURI;
+import alluxio.Configuration;
 import alluxio.annotation.PublicApi;
+import alluxio.PropertyKey;
 import alluxio.client.file.options.CreateDirectoryOptions;
 import alluxio.client.file.options.CreateFileOptions;
 import alluxio.client.file.options.DeleteOptions;
@@ -42,13 +44,19 @@ import alluxio.exception.status.NotFoundException;
 import alluxio.exception.status.UnavailableException;
 import alluxio.wire.LoadMetadataType;
 import alluxio.wire.MountPointInfo;
+import alluxio.wire.QueryInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import krati.store.SerializableObjectStore;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -64,11 +72,23 @@ public class BaseFileSystem implements FileSystem {
 
   protected final FileSystemContext mFileSystemContext;
 
+  //private static PathStore sPathStore;
+  private static SerializableObjectStore<String, Set<String>> sPathStore;
+  private static HashStore sValueStore;
+
   /**
    * @param context file system context
    * @return a {@link BaseFileSystem}
    */
   public static BaseFileSystem get(FileSystemContext context) {
+    try {
+      String storepath = Configuration.get(PropertyKey.MASTER_JOURNAL_FOLDER);
+      sValueStore = new HashStore(new File(storepath.concat("/ValueStore")), 10240);
+      //sPathStore = new HashStore(new File(storepath.concat("/PathStore")), 10240);
+      sPathStore = PathStore.getDataStore();
+    } catch (Exception e) {
+      System.out.println("Init HashStore failed");
+    }
     return new BaseFileSystem(context);
   }
 
@@ -137,7 +157,11 @@ public class BaseFileSystem implements FileSystem {
     OutStreamOptions outStreamOptions = options.toOutStreamOptions();
     outStreamOptions.setUfsPath(status.getUfsPath());
     outStreamOptions.setMountId(status.getMountId());
-    return new FileOutStream(path, outStreamOptions, mFileSystemContext);
+    FileOutStream mout = new FileOutStream(path, outStreamOptions, mFileSystemContext);
+    if (options.isIndex()) {
+      mout.setFileInfo(options.getVarName(), options.getVarType());
+    }
+    return mout;
   }
 
   @Override
@@ -427,4 +451,170 @@ public class BaseFileSystem implements FileSystem {
       mFileSystemContext.releaseMasterClient(masterClient);
     }
   }
+
+  @Override
+  public FileInStream queryFile(AlluxioURI path, String var, double max, double min,
+      boolean augmented)
+        throws FileDoesNotExistException, IOException, AlluxioException {
+    GetStatusOptions queryOption = GetStatusOptions.defaults();
+    OpenFileOptions options = OpenFileOptions.defaults();
+    QueryInfo mQuery = new QueryInfo(max, min, var, augmented);
+    queryOption.setQueryInfo(mQuery);
+    URIStatus status = getStatus(path, queryOption);
+    if (status.isFolder()) {
+      throw new FileDoesNotExistException(
+          ExceptionMessage.CANNOT_READ_DIRECTORY.getMessage(status.getName()));
+    }
+    InStreamOptions inStreamOptions = options.toInStreamOptions();
+    FileInStream instream = FileInStream.create(status, inStreamOptions, mFileSystemContext);
+    instream.setQueryLength();
+    return instream;
+  }
+
+  @Override
+  public Set<String> selectValues(List<String> keylist, List<String> valuelist,
+      List<String> typelist) throws Exception {
+    //String storepath = Configuration.get(PropertyKey.MASTER_JOURNAL_FOLDER);
+    //HashStore sValueStore = new HashStore(new File(storepath.concat("/ValueStore")), 10240);
+    Set<String> ret = new HashSet();
+    Set<String> keyset = new HashSet();
+    Set<String> tmpvalueset = new HashSet();
+    boolean hasRepeatedKey = false;
+    for (int i = 0; i < keylist.size(); i++) {
+      String tmpkey = keylist.get(i);
+      if (!keyset.add(tmpkey)) {
+        hasRepeatedKey = true;
+      }
+      Set<String> valueset = sValueStore.get(tmpkey);
+      Iterator<String> iterator = valueset.iterator();
+      if (valueset == null) {
+        continue;
+      }
+      String currentvalue = valuelist.get(i);
+      String selecttype = typelist.get(i);
+      switch (selecttype) {
+        case "eq" : {
+          if (valueset.contains(currentvalue)) {
+            ret.add(tmpkey.concat(currentvalue));
+          }
+          break;
+        } //end case "eq"
+        case "lt" : {
+          if (!isNumeric(currentvalue)) {
+            break;
+          }
+          double cvalue = Double.valueOf(currentvalue);
+          while (iterator.hasNext()) {
+            String tmpvalue = iterator.next();
+            if (isNumeric(tmpvalue)) {
+              double ivalue = Double.valueOf(tmpvalue);
+              if (ivalue >= cvalue) {
+                if (!hasRepeatedKey) {
+                  tmpvalueset.add(tmpkey.concat(tmpvalue));
+                } else {
+                  if (tmpvalueset.contains(tmpkey.concat(tmpvalue))) {
+                    ret.add(tmpkey.concat(tmpvalue));
+                  }
+                }
+              }
+            } else {
+              continue;
+            }
+          }
+          break;
+        } //end case "lt"
+        case "st" : {
+          if (!isNumeric(currentvalue)) {
+            break;
+          }
+          double cvalue = Double.valueOf(currentvalue);
+          while (iterator.hasNext()) {
+            String tmpvalue =  iterator.next();
+            if (isNumeric(tmpvalue)) {
+              double ivalue = Double.valueOf(tmpvalue);
+              if (ivalue <= cvalue) {
+                if (!hasRepeatedKey) {
+                  tmpvalueset.add(tmpkey.concat(tmpvalue));
+                } else {
+                  if (tmpvalueset.contains(tmpkey.concat(tmpvalue))) {
+                    ret.add(tmpkey.concat(tmpvalue));
+                  }
+                }
+              }
+            } else {
+              continue;
+            }
+          }
+          break;
+        } //end case "st"
+        default : {
+          System.out.println("Select type error");
+        }
+      } //End switch
+    } // End for
+    if (!hasRepeatedKey) { //only lt or st seceltion
+      ret.addAll(tmpvalueset);
+    }
+    keyset = null;
+    tmpvalueset = null;
+    return ret;
+  }
+
+  @Override
+  public Set<String> selectPaths(Set<String> keylist) throws Exception {
+    //String storepath = Configuration.get(PropertyKey.MASTER_JOURNAL_FOLDER);
+    //HashStore sPathStore = new HashStore(new File(storepath.concat("/PathStore")), 10240);
+    Set<String> ret = new HashSet();
+    Iterator<String> iterator = keylist.iterator();
+    while (iterator.hasNext()) {
+      Set<String> pathset = sPathStore.get(iterator.next());
+      if (pathset != null) {
+        ret.addAll(pathset);
+      }
+    }
+    return ret;
+  }
+
+  /**
+   * Whether the input String is numeric.
+   * @param str the input String
+   */
+  private boolean isNumeric(String str) {
+    int i;
+    for (i = 0; i < str.length(); i++) {
+      if (!Character.isDigit(str.charAt(i))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  @Override
+  public Set<String> mpiSetect(List<String> keylist, List<String> valuelist, List<String> typelist,
+      int mpisize, int mpirank) throws Exception {
+    Set<String> ret = new HashSet();
+    //String storepath = Configuration.get(PropertyKey.MASTER_JOURNAL_FOLDER);
+    //HashStore sPathStore = new HashStore(new File(storepath.concat("/PathStore")), 10240);
+    Set<String> pathkeyset = null;
+    int i;
+    try {
+      pathkeyset = selectValues(keylist, valuelist, typelist);
+    } catch (Exception e) {
+      System.out.println("Get path key error!");
+    }
+    if (pathkeyset == null) {
+      System.out.println("No satisfied KV pairs in Hash Store");
+      return null;
+    } else {
+      Object[] pathkeys = pathkeyset.toArray();
+      for (i = mpirank; i < pathkeys.length; i += mpisize) {
+        Set<String> tmppathset = sPathStore.get((String) pathkeys[i]);
+        if (tmppathset != null) {
+          ret.addAll(tmppathset);
+        }
+      }
+    }
+    return ret;
+  }
+
 }

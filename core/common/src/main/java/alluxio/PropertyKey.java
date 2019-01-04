@@ -1527,7 +1527,7 @@ public final class PropertyKey implements Comparable<PropertyKey> {
           .build();
   public static final PropertyKey USER_LOCAL_WRITER_PACKET_SIZE_BYTES =
       new Builder(Name.USER_LOCAL_WRITER_PACKET_SIZE_BYTES)
-          .setDefaultValue("64KB")
+          .setDefaultValue("512KB")
           .setDescription("When a client writes to a local worker, the maximum data packet size.")
           .build();
   public static final PropertyKey USER_NETWORK_NETTY_CHANNEL =

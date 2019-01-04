@@ -40,6 +40,7 @@ import alluxio.wire.MountPointInfo;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Basic file system interface supporting metadata operations and data operations. Developers
@@ -354,4 +355,47 @@ public interface FileSystem {
    * @param options options to associate with this operation
    */
   void unmount(AlluxioURI path, UnmountOptions options) throws IOException, AlluxioException;
+
+  /**
+   * Query block index info.
+   * @param path path the file to query from
+   * @param max the query max value
+   * @param min the query min value
+   * @param var the query var name
+   * @param augmented whether to use augmented index
+   * @return a {@link FileInStream} for the given path
+   * @throws FileDoesNotExistException if the given file does not exist
+   */
+  FileInStream queryFile(AlluxioURI path, String var, double max, double min, boolean augmented)
+     throws FileDoesNotExistException, IOException, AlluxioException;
+
+  /**
+   * Select the satisfied values from the Hash Store.
+   * @param keylist the selected keys
+   * @param valuelist the query condition value
+   * @param typelist the query type(e.g. equal|lt|st)
+   * @return a list of values that satisfied the query conditons
+   */
+  Set<String> selectValues(List<String> keylist, List<String> valuelist, List<String> typelist)
+      throws Exception;
+
+  /**
+   * Retrieve the path list of corresponding keys.
+   * @param keylist the selected keys
+   * @return a list of paths that satisfied the query conditons
+   */
+  Set<String> selectPaths(Set<String> keylist) throws Exception;
+
+  /**
+   * A special function that incorperates with MPI to enable parallel query processing.
+   * @param keylist the selected keys
+   * @param valuelist the query condition value
+   * @param typelist the query type(e.g. equal|lt|st)
+   * @param mpisize total number of processes launched by MPI
+   * @param mpirank the rank of MPI process
+   * @return a list of paths that satisfied the query conditons
+   */
+  Set<String> mpiSetect(List<String> keylist, List<String> valuelist, List<String> typelist,
+      int mpisize, int mpirank) throws Exception;
+
 }

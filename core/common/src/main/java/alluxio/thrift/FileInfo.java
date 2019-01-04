@@ -17,6 +17,7 @@ import org.apache.thrift.EncodingUtils;
 import org.apache.thrift.TException;
 import org.apache.thrift.async.AsyncMethodCallback;
 import org.apache.thrift.server.AbstractNonblockingServer.*;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
@@ -63,6 +64,8 @@ public class FileInfo implements org.apache.thrift.TBase<FileInfo, FileInfo._Fie
   private static final org.apache.thrift.protocol.TField TTL_ACTION_FIELD_DESC = new org.apache.thrift.protocol.TField("ttlAction", org.apache.thrift.protocol.TType.I32, (short)24);
   private static final org.apache.thrift.protocol.TField MOUNT_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("mountId", org.apache.thrift.protocol.TType.I64, (short)25);
   private static final org.apache.thrift.protocol.TField IN_ALLUXIO_PERCENTAGE_FIELD_DESC = new org.apache.thrift.protocol.TField("inAlluxioPercentage", org.apache.thrift.protocol.TType.I32, (short)26);
+  private static final org.apache.thrift.protocol.TField UKEY_FIELD_DESC = new org.apache.thrift.protocol.TField("mUKey", org.apache.thrift.protocol.TType.LIST, (short)27);
+  private static final org.apache.thrift.protocol.TField UVALUE_FIELD_DESC = new org.apache.thrift.protocol.TField("mUValue", org.apache.thrift.protocol.TType.LIST, (short)28);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -95,6 +98,9 @@ public class FileInfo implements org.apache.thrift.TBase<FileInfo, FileInfo._Fie
   private alluxio.thrift.TTtlAction ttlAction; // required
   private long mountId; // required
   private int inAlluxioPercentage; // required
+  private List<String> mUKey;
+  private List<String> mUValue;
+  private boolean mUDM;
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -126,7 +132,9 @@ public class FileInfo implements org.apache.thrift.TBase<FileInfo, FileInfo._Fie
      */
     TTL_ACTION((short)24, "ttlAction"),
     MOUNT_ID((short)25, "mountId"),
-    IN_ALLUXIO_PERCENTAGE((short)26, "inAlluxioPercentage");
+    IN_ALLUXIO_PERCENTAGE((short)26, "inAlluxioPercentage"),
+    UKEY((short)27,"mUKey"),
+    UVALUE((short)28,"mUValue");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -191,6 +199,10 @@ public class FileInfo implements org.apache.thrift.TBase<FileInfo, FileInfo._Fie
           return MOUNT_ID;
         case 26: // IN_ALLUXIO_PERCENTAGE
           return IN_ALLUXIO_PERCENTAGE;
+        case 27: //UKEY
+          return UKEY;
+        case 28: //UVALUE
+          return UVALUE;
         default:
           return null;
       }
@@ -303,6 +315,12 @@ public class FileInfo implements org.apache.thrift.TBase<FileInfo, FileInfo._Fie
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
     tmpMap.put(_Fields.IN_ALLUXIO_PERCENTAGE, new org.apache.thrift.meta_data.FieldMetaData("inAlluxioPercentage", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
+    tmpMap.put(_Fields.UKEY, new org.apache.thrift.meta_data.FieldMetaData("mUKey",  org.apache.thrift.TFieldRequirementType.OPTIONAL,
+        new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST,
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
+    tmpMap.put(_Fields.UVALUE, new org.apache.thrift.meta_data.FieldMetaData("mUValue",  org.apache.thrift.TFieldRequirementType.OPTIONAL,
+        new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST,
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(FileInfo.class, metaDataMap);
   }
@@ -379,6 +397,9 @@ public class FileInfo implements org.apache.thrift.TBase<FileInfo, FileInfo._Fie
     setMountIdIsSet(true);
     this.inAlluxioPercentage = inAlluxioPercentage;
     setInAlluxioPercentageIsSet(true);
+    mUDM = false;
+    mUKey = new ArrayList<String>();
+    mUValue = new ArrayList<String>();
   }
 
   /**
@@ -434,6 +455,9 @@ public class FileInfo implements org.apache.thrift.TBase<FileInfo, FileInfo._Fie
     }
     this.mountId = other.mountId;
     this.inAlluxioPercentage = other.inAlluxioPercentage;
+    this.mUKey = other.mUKey;
+    this.mUValue = other.mUValue;
+    this.mUDM = other.mUDM;
   }
 
   public FileInfo deepCopy() {
@@ -483,10 +507,33 @@ public class FileInfo implements org.apache.thrift.TBase<FileInfo, FileInfo._Fie
     this.mountId = 0;
     setInAlluxioPercentageIsSet(false);
     this.inAlluxioPercentage = 0;
+    this.mUKey = null;
+    this.mUValue = null;
+    this.mUDM = false;
   }
 
   public long getFileId() {
     return this.fileId;
+  }
+
+  //Add user-defnied metadata
+  public void setUDM(HashMap<String, String> udmlist) {    
+    Set<String> keyset = udmlist.keySet();
+    Iterator<String> it = keyset.iterator();
+    while (it.hasNext()) {
+      this.mUDM = true;
+      String tmpkey = it.next();
+      mUKey.add(tmpkey);
+      mUValue.add(udmlist.get(tmpkey));
+    }
+  }
+
+  public List<String> getUKey() {
+    return this.mUKey;
+  }
+
+  public  List<String> getUValue() {
+    return this.mUValue;
   }
 
   public FileInfo setFileId(long fileId) {
@@ -2506,6 +2553,38 @@ public class FileInfo implements org.apache.thrift.TBase<FileInfo, FileInfo._Fie
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 27: //UKEY
+            if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
+              {
+                org.apache.thrift.protocol.TList _list32 = iprot.readListBegin();
+                struct.mUKey = new ArrayList<String>(_list32.size);
+                String _elem33;
+                for (int _i34 = 0; _i34 < _list32.size; ++_i34) {
+                  _elem33 = iprot.readString();
+                  struct.mUKey.add(_elem33);
+                }
+                iprot.readListEnd();
+              }
+            } else {
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 28: //UVALUE
+            if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
+              {
+                org.apache.thrift.protocol.TList _list32 = iprot.readListBegin();
+                struct.mUValue = new ArrayList<String>(_list32.size);
+                String _elem33;
+                for (int _i34 = 0; _i34 < _list32.size; ++_i34) {
+                  _elem33 = iprot.readString();
+                  struct.mUValue.add(_elem33);
+                }
+                iprot.readListEnd();
+              }
+            } else {
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -2628,6 +2707,29 @@ public class FileInfo implements org.apache.thrift.TBase<FileInfo, FileInfo._Fie
       oprot.writeFieldBegin(IN_ALLUXIO_PERCENTAGE_FIELD_DESC);
       oprot.writeI32(struct.inAlluxioPercentage);
       oprot.writeFieldEnd();
+      //Write user-defined metadata      
+      if (struct.mUDM) {
+        // UKEY_FIELD_DESC
+        oprot.writeFieldBegin(UKEY_FIELD_DESC);
+          {
+            oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.mUKey.size()));
+            for(String tmp3 : struct.mUKey) {
+              oprot.writeString(tmp3);
+            }
+            oprot.writeListEnd();
+          }
+        oprot.writeFieldEnd();
+        // UVALUE_FIELD_DESC
+        oprot.writeFieldBegin(UVALUE_FIELD_DESC);
+          {
+            oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.mUValue.size()));
+            for(String tmp3 : struct.mUValue) {
+              oprot.writeString(tmp3);
+            }
+            oprot.writeListEnd();
+          }
+        oprot.writeFieldEnd();
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -2809,6 +2911,18 @@ public class FileInfo implements org.apache.thrift.TBase<FileInfo, FileInfo._Fie
       if (struct.isSetInAlluxioPercentage()) {
         oprot.writeI32(struct.inAlluxioPercentage);
       }
+      if (struct.mUDM) {
+        // Write user-defined metadata key
+        oprot.writeI32(struct.mUKey.size());
+        for (String tmp3 : struct.mUKey) {
+           oprot.writeString(tmp3);
+        }
+        //Write user-defined metadata value
+        oprot.writeI32(struct.mUValue.size());
+        for (String tmp3 : struct.mUValue) {
+           oprot.writeString(tmp3);
+        }
+      }
     }
 
     @Override
@@ -2933,6 +3047,28 @@ public class FileInfo implements org.apache.thrift.TBase<FileInfo, FileInfo._Fie
       if (incoming.get(24)) {
         struct.inAlluxioPercentage = iprot.readI32();
         struct.setInAlluxioPercentageIsSet(true);
+      }
+      if (incoming.get(25)) {
+        {
+          org.apache.thrift.protocol.TList _list44 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.mUKey = new ArrayList<String>(_list44.size);
+          String tmp3;
+          for (int _i46 = 0; _i46 < _list44.size; ++_i46) {
+            tmp3 = iprot.readString();
+            struct.mUKey.add(tmp3);
+          }
+        }
+      }
+      if  (incoming.get(26)) {
+        {
+          org.apache.thrift.protocol.TList _list44 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.mUValue = new ArrayList<String>(_list44.size);
+          String tmp3;
+          for (int _i46 = 0; _i46 < _list44.size; ++_i46) {
+            tmp3 = iprot.readString();
+            struct.mUValue.add(tmp3);
+          }
+        }
       }
     }
   }

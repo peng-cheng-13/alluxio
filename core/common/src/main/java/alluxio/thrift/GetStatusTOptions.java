@@ -39,6 +39,11 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
   private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("GetStatusTOptions");
 
   private static final org.apache.thrift.protocol.TField LOAD_METADATA_TYPE_FIELD_DESC = new org.apache.thrift.protocol.TField("loadMetadataType", org.apache.thrift.protocol.TType.I32, (short)1);
+  private static final org.apache.thrift.protocol.TField VARNAME_FIELD_DESC = new org.apache.thrift.protocol.TField("varname", org.apache.thrift.protocol.TType.STRING, (short)2);
+  private static final org.apache.thrift.protocol.TField MAXVALUE_FIELD_DESC = new org.apache.thrift.protocol.TField("query_max", org.apache.thrift.protocol.TType.DOUBLE, (short)3);
+  private static final org.apache.thrift.protocol.TField MINVALUE_FIELD_DESC = new org.apache.thrift.protocol.TField("query_min", org.apache.thrift.protocol.TType.DOUBLE, (short)4);
+  private static final org.apache.thrift.protocol.TField ISQUERY_FIELD_DESC = new org.apache.thrift.protocol.TField("isQuery",  org.apache.thrift.protocol.TType.BOOL, (short)5);
+  private static final org.apache.thrift.protocol.TField AUGMENT_FIELD_DESC = new org.apache.thrift.protocol.TField("query_augmented",  org.apache.thrift.protocol.TType.BOOL, (short)6);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -47,6 +52,11 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
   }
 
   private LoadMetadataTType loadMetadataType; // optional
+  private boolean isQuery;
+  private String varname = "";
+  private double query_max;
+  private double query_min;
+  private boolean query_augmented;
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -54,7 +64,12 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
      * 
      * @see LoadMetadataTType
      */
-    LOAD_METADATA_TYPE((short)1, "loadMetadataType");
+    LOAD_METADATA_TYPE((short)1, "loadMetadataType"),
+    VARNAME((short)2, "varname"),
+    MAXVALUE((short)3, "query_max"),
+    MINVALUE((short)4, "query_min"),
+    ISQUERY((short)5, "isQuery"),
+    AUGMENT((short)6, "query_augmented");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -71,6 +86,16 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
       switch(fieldId) {
         case 1: // LOAD_METADATA_TYPE
           return LOAD_METADATA_TYPE;
+        case 2: //VARNAME
+          return VARNAME;
+        case 3: //MAXVALUE
+          return MAXVALUE;
+        case 4: //MINVALUE
+          return MINVALUE;
+        case 5: //ISQUERY
+          return ISQUERY;
+        case 6: //AUGMENT
+          return AUGMENT;
         default:
           return null;
       }
@@ -117,6 +142,16 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
     tmpMap.put(_Fields.LOAD_METADATA_TYPE, new org.apache.thrift.meta_data.FieldMetaData("loadMetadataType", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.EnumMetaData(org.apache.thrift.protocol.TType.ENUM, LoadMetadataTType.class)));
+    tmpMap.put(_Fields.VARNAME, new org.apache.thrift.meta_data.FieldMetaData("varname",  org.apache.thrift.TFieldRequirementType.OPTIONAL,
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.MAXVALUE, new org.apache.thrift.meta_data.FieldMetaData("query_max",  org.apache.thrift.TFieldRequirementType.OPTIONAL,
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.DOUBLE)));
+    tmpMap.put(_Fields.MINVALUE, new org.apache.thrift.meta_data.FieldMetaData("query_min",  org.apache.thrift.TFieldRequirementType.OPTIONAL,
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.DOUBLE)));
+    tmpMap.put(_Fields.ISQUERY, new org.apache.thrift.meta_data.FieldMetaData("isQuery",  org.apache.thrift.TFieldRequirementType.OPTIONAL,
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
+    tmpMap.put(_Fields.AUGMENT, new org.apache.thrift.meta_data.FieldMetaData("query_augmented",  org.apache.thrift.TFieldRequirementType.OPTIONAL,
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(GetStatusTOptions.class, metaDataMap);
   }
@@ -140,6 +175,39 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
   @Override
   public void clear() {
     this.loadMetadataType = null;
+    this.isQuery = false;
+    this.varname = "";
+    this.query_max = 0;
+    this.query_min = 0;
+    this.query_augmented = false;
+  }
+
+  public void setQueryInfo(String var, double max, double min, boolean augmented) {
+    this.isQuery = true;
+    this.varname = var;
+    this.query_max = max;
+    this.query_min = min;
+    this.query_augmented = augmented;
+  }
+
+  public String getVar() {
+    return this.varname;
+  } 
+
+  public double getQMax() {
+    return this.query_max;
+  }
+
+  public double getQMin() {
+    return this.query_min;
+  }
+
+  public boolean getIsQuery() {
+    return this.isQuery;
+  }
+
+  public boolean useAugmentedIndex() {
+    return this.query_augmented;
   }
 
   /**
@@ -344,6 +412,41 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 2: // VARNAME
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+              struct.varname = iprot.readString();
+            } else {
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 3: //MAXVALUE
+            if (schemeField.type == org.apache.thrift.protocol.TType.DOUBLE) {
+              struct.query_max = iprot.readDouble();
+            }else {
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 4: //MINVALUE
+            if (schemeField.type == org.apache.thrift.protocol.TType.DOUBLE) {
+              struct.query_min = iprot.readDouble();
+            }else {
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 5: //ISQUERY
+            if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
+              struct.isQuery = iprot.readBool();
+            }else {
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 6: //AUGMENT
+            if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
+              struct.query_augmented = iprot.readBool();
+            }else {
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -365,6 +468,28 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
           oprot.writeI32(struct.loadMetadataType.getValue());
           oprot.writeFieldEnd();
         }
+      }
+      if (struct.isQuery) {
+        // VARNAME
+        oprot.writeFieldBegin(VARNAME_FIELD_DESC);
+        oprot.writeString(struct.varname);
+        oprot.writeFieldEnd();
+        // MAXVALUE
+        oprot.writeFieldBegin(MAXVALUE_FIELD_DESC);
+        oprot.writeDouble(struct.query_max);
+        oprot.writeFieldEnd();
+        // MINVALUE
+        oprot.writeFieldBegin(MINVALUE_FIELD_DESC);
+        oprot.writeDouble(struct.query_min);
+        oprot.writeFieldEnd();
+        // ISQUERY
+        oprot.writeFieldBegin(ISQUERY_FIELD_DESC);
+        oprot.writeBool(struct.isQuery);
+        oprot.writeFieldEnd();
+        // AUGMENT
+        oprot.writeFieldBegin(AUGMENT_FIELD_DESC);
+        oprot.writeBool(struct.query_augmented);
+        oprot.writeFieldEnd();
       }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
@@ -391,6 +516,13 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
       if (struct.isSetLoadMetadataType()) {
         oprot.writeI32(struct.loadMetadataType.getValue());
       }
+      if (struct.isQuery) {
+        oprot.writeString(struct.varname);
+        oprot.writeDouble(struct.query_max);
+        oprot.writeDouble(struct.query_min);
+        oprot.writeBool(struct.isQuery);
+        oprot.writeBool(struct.query_augmented);
+      }
     }
 
     @Override
@@ -400,6 +532,21 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
       if (incoming.get(0)) {
         struct.loadMetadataType = alluxio.thrift.LoadMetadataTType.findByValue(iprot.readI32());
         struct.setLoadMetadataTypeIsSet(true);
+      }
+      if (incoming.get(1)) {
+        struct.varname = iprot.readString();
+      }
+      if (incoming.get(2)) {
+        struct.query_max = iprot.readDouble();
+      }
+      if (incoming.get(3)) {
+        struct.query_min = iprot.readDouble();
+      }
+      if (incoming.get(4)) {
+         struct.isQuery = iprot.readBool();
+      }
+      if (incoming.get(5)) {
+         struct.query_augmented = iprot.readBool();
       }
     }
   }

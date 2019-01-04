@@ -40,6 +40,9 @@ public class ListStatusTOptions implements org.apache.thrift.TBase<ListStatusTOp
 
   private static final org.apache.thrift.protocol.TField LOAD_DIRECT_CHILDREN_FIELD_DESC = new org.apache.thrift.protocol.TField("loadDirectChildren", org.apache.thrift.protocol.TType.BOOL, (short)1);
   private static final org.apache.thrift.protocol.TField LOAD_METADATA_TYPE_FIELD_DESC = new org.apache.thrift.protocol.TField("loadMetadataType", org.apache.thrift.protocol.TType.I32, (short)2);
+  private static final org.apache.thrift.protocol.TField UKEY_FIELD_DESC = new org.apache.thrift.protocol.TField("mUKey", org.apache.thrift.protocol.TType.LIST, (short)3);
+  private static final org.apache.thrift.protocol.TField UVALUE_FIELD_DESC = new org.apache.thrift.protocol.TField("mUValue", org.apache.thrift.protocol.TType.LIST, (short)4);
+  private static final org.apache.thrift.protocol.TField STYPE_FIELD_DESC = new org.apache.thrift.protocol.TField("mSelectType", org.apache.thrift.protocol.TType.LIST, (short)5);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -49,6 +52,10 @@ public class ListStatusTOptions implements org.apache.thrift.TBase<ListStatusTOp
 
   private boolean loadDirectChildren; // optional
   private LoadMetadataTType loadMetadataType; // optional
+  private List<String> mUKey = new ArrayList<String>();
+  private List<String> mUValue = new ArrayList<String>();
+  private List<String> mSelectType = new ArrayList<String>();
+  private boolean mUDM;
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -57,7 +64,10 @@ public class ListStatusTOptions implements org.apache.thrift.TBase<ListStatusTOp
      * 
      * @see LoadMetadataTType
      */
-    LOAD_METADATA_TYPE((short)2, "loadMetadataType");
+    LOAD_METADATA_TYPE((short)2, "loadMetadataType"),
+    UKEY((short)3,"mUKey"),
+    UVALUE((short)4,"mUValue"),
+    STYPE((short)5,"mSelectType");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -76,6 +86,12 @@ public class ListStatusTOptions implements org.apache.thrift.TBase<ListStatusTOp
           return LOAD_DIRECT_CHILDREN;
         case 2: // LOAD_METADATA_TYPE
           return LOAD_METADATA_TYPE;
+        case 3: //UKEY
+          return UKEY;
+        case 4: //UVALUE
+          return UVALUE;
+        case 5: //STYPE
+          return STYPE;
         default:
           return null;
       }
@@ -126,6 +142,15 @@ public class ListStatusTOptions implements org.apache.thrift.TBase<ListStatusTOp
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
     tmpMap.put(_Fields.LOAD_METADATA_TYPE, new org.apache.thrift.meta_data.FieldMetaData("loadMetadataType", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.EnumMetaData(org.apache.thrift.protocol.TType.ENUM, LoadMetadataTType.class)));
+    tmpMap.put(_Fields.UKEY, new org.apache.thrift.meta_data.FieldMetaData("mUKey",  org.apache.thrift.TFieldRequirementType.OPTIONAL,
+        new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST,
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
+    tmpMap.put(_Fields.UVALUE, new org.apache.thrift.meta_data.FieldMetaData("mUValue",  org.apache.thrift.TFieldRequirementType.OPTIONAL,
+        new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST,
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
+    tmpMap.put(_Fields.STYPE, new org.apache.thrift.meta_data.FieldMetaData("mSelectType",  org.apache.thrift.TFieldRequirementType.OPTIONAL,
+        new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST,
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(ListStatusTOptions.class, metaDataMap);
   }
@@ -142,6 +167,10 @@ public class ListStatusTOptions implements org.apache.thrift.TBase<ListStatusTOp
     if (other.isSetLoadMetadataType()) {
       this.loadMetadataType = other.loadMetadataType;
     }
+    this.mUKey = other.mUKey;
+    this.mUValue = other.mUValue;
+    this.mSelectType = other.mSelectType;
+    this.mUDM = other.mUDM;
   }
 
   public ListStatusTOptions deepCopy() {
@@ -153,6 +182,29 @@ public class ListStatusTOptions implements org.apache.thrift.TBase<ListStatusTOp
     setLoadDirectChildrenIsSet(false);
     this.loadDirectChildren = false;
     this.loadMetadataType = null;
+    this.mUKey = null;
+    this.mUValue = null;
+    this.mSelectType = null;
+    this.mUDM = false;
+  }
+
+  public void setQuery(List<String> keylist, List<String> valuelist, List<String> typelist) {
+    this.mUDM = true;
+    this.mUKey = keylist;
+    this.mUValue = valuelist;
+    this.mSelectType = typelist;
+  }
+
+  public List<String> getUKey() {
+    return this.mUKey;
+  }
+
+  public List<String> getUValue() {
+    return this.mUValue;
+  }
+
+  public List<String> getSType() {
+    return this.mSelectType;
   }
 
   public boolean isLoadDirectChildren() {
@@ -433,6 +485,54 @@ public class ListStatusTOptions implements org.apache.thrift.TBase<ListStatusTOp
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 3: // UKEY
+            if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
+              {
+                org.apache.thrift.protocol.TList _list32 = iprot.readListBegin();
+                struct.mUKey = new ArrayList<String>(_list32.size);
+                String _elem33;
+                for (int _i34 = 0; _i34 < _list32.size; ++_i34) {
+                  _elem33 = iprot.readString();
+                  struct.mUKey.add(_elem33);
+                }
+                iprot.readListEnd();
+              }
+            } else {
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 4: // UVALUE 
+            if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
+              {
+                org.apache.thrift.protocol.TList _list32 = iprot.readListBegin();
+                struct.mUValue = new ArrayList<String>(_list32.size);
+                String _elem33;
+                for (int _i34 = 0; _i34 < _list32.size; ++_i34) {
+                  _elem33 = iprot.readString();
+                  struct.mUValue.add(_elem33);
+                }
+                iprot.readListEnd();
+              }
+            } else {
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 5: // STYPE
+            if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
+              {
+                org.apache.thrift.protocol.TList _list32 = iprot.readListBegin();
+                struct.mSelectType = new ArrayList<String>(_list32.size);
+                String _elem33;
+                for (int _i34 = 0; _i34 < _list32.size; ++_i34) {
+                  _elem33 = iprot.readString();
+                  struct.mSelectType.add(_elem33);
+                }
+                iprot.readListEnd();
+              }
+            } else {
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -459,6 +559,38 @@ public class ListStatusTOptions implements org.apache.thrift.TBase<ListStatusTOp
           oprot.writeI32(struct.loadMetadataType.getValue());
           oprot.writeFieldEnd();
         }
+      }
+      if (struct.mUDM) {
+        // UKEY_FIELD_DESC
+        oprot.writeFieldBegin(UKEY_FIELD_DESC);
+        {
+          oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.mUKey.size()));
+          for(String tmp3 : struct.mUKey) {
+            oprot.writeString(tmp3);
+          }
+          oprot.writeListEnd();
+        }
+        oprot.writeFieldEnd();
+       // UVALUE_FIELD_DESC
+       oprot.writeFieldBegin(UVALUE_FIELD_DESC);
+        {
+          oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.mUValue.size()));
+          for(String tmp3 : struct.mUValue) {
+            oprot.writeString(tmp3);
+          }
+          oprot.writeListEnd();
+        }
+        oprot.writeFieldEnd();
+        // STYPE_FIELD_DESC
+        oprot.writeFieldBegin(STYPE_FIELD_DESC);
+        {
+          oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.mSelectType.size()));
+          for(String tmp3 : struct.mSelectType) {
+            oprot.writeString(tmp3);
+          }
+          oprot.writeListEnd();
+        }
+        oprot.writeFieldEnd();
       }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
@@ -491,6 +623,23 @@ public class ListStatusTOptions implements org.apache.thrift.TBase<ListStatusTOp
       if (struct.isSetLoadMetadataType()) {
         oprot.writeI32(struct.loadMetadataType.getValue());
       }
+      if (struct.mUDM) {
+        // Write user-defined metadata key
+        oprot.writeI32(struct.mUKey.size());
+        for (String tmp3 : struct.mUKey) {
+           oprot.writeString(tmp3);
+        }
+        // Write user-defined metadata value
+        oprot.writeI32(struct.mUValue.size());
+        for (String tmp3 : struct.mUValue) {
+           oprot.writeString(tmp3);
+        }
+        // Write query type
+        oprot.writeI32(struct.mSelectType.size());
+        for (String tmp3 : struct.mSelectType) {
+           oprot.writeString(tmp3);
+        }
+      }
     }
 
     @Override
@@ -504,6 +653,39 @@ public class ListStatusTOptions implements org.apache.thrift.TBase<ListStatusTOp
       if (incoming.get(1)) {
         struct.loadMetadataType = alluxio.thrift.LoadMetadataTType.findByValue(iprot.readI32());
         struct.setLoadMetadataTypeIsSet(true);
+      }
+      if (incoming.get(2)) {
+        {
+          org.apache.thrift.protocol.TList _list44 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.mUKey = new ArrayList<String>(_list44.size);
+          String tmp3;
+          for (int _i46 = 0; _i46 < _list44.size; ++_i46) {
+            tmp3 = iprot.readString();
+            struct.mUKey.add(tmp3);
+          }
+        }
+      }
+      if  (incoming.get(3)) {
+        {
+          org.apache.thrift.protocol.TList _list44 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.mUValue = new ArrayList<String>(_list44.size);
+          String tmp3;
+          for (int _i46 = 0; _i46 < _list44.size; ++_i46) {
+            tmp3 = iprot.readString();
+            struct.mUValue.add(tmp3);
+          }
+        }
+      }
+      if  (incoming.get(4)) {
+        {
+          org.apache.thrift.protocol.TList _list44 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.mSelectType = new ArrayList<String>(_list44.size);
+          String tmp3;
+          for (int _i46 = 0; _i46 < _list44.size; ++_i46) {
+            tmp3 = iprot.readString();
+            struct.mSelectType.add(tmp3);
+          }
+        }
       }
     }
   }

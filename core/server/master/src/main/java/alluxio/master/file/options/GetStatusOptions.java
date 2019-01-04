@@ -13,6 +13,7 @@ package alluxio.master.file.options;
 
 import alluxio.thrift.GetStatusTOptions;
 import alluxio.wire.LoadMetadataType;
+import alluxio.wire.QueryInfo;
 
 import com.google.common.base.Objects;
 
@@ -24,6 +25,8 @@ import javax.annotation.concurrent.NotThreadSafe;
 @NotThreadSafe
 public final class GetStatusOptions {
   private LoadMetadataType mLoadMetadataType;
+  private QueryInfo mQueryInfo;
+  //boolean mQuery;
 
   /**
    * @return the default {@link GetStatusOptions}
@@ -34,6 +37,8 @@ public final class GetStatusOptions {
 
   private GetStatusOptions() {
     mLoadMetadataType = LoadMetadataType.Once;
+    mQueryInfo = null;
+    //mQuery = false;
   }
 
   /**
@@ -46,6 +51,29 @@ public final class GetStatusOptions {
     if (options.isSetLoadMetadataType()) {
       mLoadMetadataType = LoadMetadataType.fromThrift(options.getLoadMetadataType());
     }
+    if (options.getIsQuery()) {
+      //mQuery = true;
+      mQueryInfo = new QueryInfo(options.getQMax(), options.getQMin(), options.getVar(),
+          options.useAugmentedIndex());
+    }
+  }
+
+  /**
+   * Set the query info.
+   * @param var the query var name
+   * @param max the query max value
+   * @param min the query min value
+   *
+  public void setQueryInfo(String var, double max, double min) {
+    mQueryInfo = new QueryInfo(var, max, min);
+  }*/
+
+  /**
+   * Get the query info.
+   * @return the query info
+   */
+  public QueryInfo getQueryInfo() {
+    return mQueryInfo;
   }
 
   /**

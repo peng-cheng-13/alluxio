@@ -31,6 +31,9 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 
+import java.util.ArrayList;
+import java.io.IOException;
+
 import javax.annotation.concurrent.NotThreadSafe;
 
 /**
@@ -48,6 +51,9 @@ public final class CreateFileOptions {
   private Mode mMode;
   private int mWriteTier;
   private WriteType mWriteType;
+  private ArrayList<String> mVarName;
+  private ArrayList<String> mVarType;
+  private boolean mIndex;
 
   /**
    * @return the default {@link CreateFileOptions}
@@ -71,6 +77,80 @@ public final class CreateFileOptions {
     mTtl = Constants.NO_TTL;
     mTtlAction = TtlAction.DELETE;
     mMode = Mode.defaults().applyFileUMask();
+    mVarName = new ArrayList<String>();
+    mVarType = new ArrayList<String>();
+    mIndex = false;
+  }
+
+  /**
+   * Set file info to generate index.
+   * @param varname the list contains the var name
+   * @param vartype the list contains the var type
+   */
+  public void setFileInfo(ArrayList<String> varname, ArrayList<String> vartype)
+      throws IOException {
+    int i = 0;
+    // Length of 'short' is 2
+    long tmpstride = 2;
+    String tmpvar;
+    String tmptype;
+    if (varname.size() != vartype.size()) {
+      throw new IOException("Wrong var info!!!");
+    }
+    //Get stride info
+    for (i = 0; i < vartype.size(); i++) {
+      tmptype = vartype.get(i);
+      switch (tmptype) {
+        case "SHORT" : {
+          tmpstride = 2;
+          break;
+        }
+        case "FLOAT" :
+        case "INT" : {
+          tmpstride = 4;
+          break;
+        }
+        case "LONG" :
+        case "DOUBLE" : {
+          tmpstride = 8;
+          break;
+        }
+        default : {
+          break;
+        }
+      }
+    }
+    // Init file index info
+    mIndex = true;
+    mVarName = varname;
+    mVarType = vartype;
+    // Length of single struct
+    long len = tmpstride * vartype.size();
+    // Set block size for alignment
+    if ((mBlockSizeBytes % len) != 0) {
+      mBlockSizeBytes = mBlockSizeBytes - mBlockSizeBytes % len;
+    }
+  }
+
+  /**
+   * @return the index var name
+   */
+  public ArrayList<String> getVarName() {
+    return mVarName;
+  }
+
+  /**
+   * @return the index var type
+   */
+  public ArrayList<String> getVarType() {
+    return mVarType;
+  }
+
+  /**
+   * @return whether it contains index info
+   */
+  public boolean isIndex() {
+    return mIndex;
   }
 
   /**

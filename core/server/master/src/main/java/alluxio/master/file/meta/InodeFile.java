@@ -21,11 +21,13 @@ import alluxio.master.file.options.CreateFileOptions;
 import alluxio.proto.journal.File.InodeFileEntry;
 import alluxio.proto.journal.Journal.JournalEntry;
 import alluxio.wire.FileInfo;
+import alluxio.wire.IndexInfo;
 
 import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -41,6 +43,8 @@ public final class InodeFile extends Inode<InodeFile> {
   private boolean mCacheable;
   private boolean mCompleted;
   private long mLength;
+  private HashMap<String, IndexInfo> mBlockIndexs = new HashMap<String, IndexInfo>();
+  private HashMap<String, String> mUDM = new HashMap<String, String>();
 
   /**
    * Creates a new instance of {@link InodeFile}.
@@ -55,6 +59,53 @@ public final class InodeFile extends Inode<InodeFile> {
     mCacheable = false;
     mCompleted = false;
     mLength = 0;
+    mBlockIndexs = new HashMap<String, IndexInfo>();
+    mUDM = new HashMap<String, String>();
+  }
+
+  /**
+   * Add user-defined metadata.
+   * @param key the key of user-defined metadata
+   * @param value the value of user-defined metadata
+   */
+  public void addUDM(List<String> key, List<String> value) {
+    int i;
+    for (i = 0; i < key.size(); i++) {
+      mUDM.put(key.get(i), value.get(i));
+    }
+  }
+
+  /**
+   * Delete user-defined metadata.
+   * @param key the key of user-defined metadat to delete
+   */
+  public void deleteUDM(List<String> key) {
+    for (String tmp : key) {
+      mUDM.remove(tmp);
+    }
+  }
+
+  /**
+   * @return the user-defined metadata
+   */
+  public HashMap<String, String> getUDM() {
+    return mUDM;
+  }
+
+  /**
+   * Add BlockIndex info.
+   * @param key the key of block index
+   * @param value the IndexInfo struct
+   */
+  public void addBlockIndex(String key, IndexInfo value) {
+    mBlockIndexs.put(key, value);
+  }
+
+  /**
+   * @return the blocks index info list
+   */
+  public HashMap getBlockIndexs() {
+    return mBlockIndexs;
   }
 
   @Override

@@ -17,6 +17,7 @@ import com.google.common.base.Preconditions;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -53,6 +54,8 @@ public final class FileInfo implements Serializable {
   private ArrayList<FileBlockInfo> mFileBlockInfos = new ArrayList<>();
   private long mMountId;
   private int mInAlluxioPercentage;
+  private HashMap<String, String> mUDM = new HashMap<String, String>();
+  private boolean mHasUDM = false;
 
   /**
    * Creates a new instance of {@link FileInfo}.
@@ -93,8 +96,24 @@ public final class FileInfo implements Serializable {
         mFileBlockInfos.add(new FileBlockInfo(fileBlockInfo));
       }
     }
+    if (fileInfo.getUKey() != null) {
+      mHasUDM = true;
+      List<String> keylist = fileInfo.getUKey();
+      List<String> valuelist = fileInfo.getUValue();
+      int i;
+      for (i = 0; i < keylist.size(); i++) {
+        mUDM.put(keylist.get(i), valuelist.get(i));
+      }
+    }
     mMountId = fileInfo.getMountId();
     mInAlluxioPercentage = fileInfo.getInAlluxioPercentage();
+  }
+
+  /**
+   * @return the user-defined metadata
+   */
+  public HashMap<String, String> getUDM() {
+    return mUDM;
   }
 
   /**
@@ -505,6 +524,14 @@ public final class FileInfo implements Serializable {
   }
 
   /**
+   * @param udmlist user-defined metadata list
+   */
+  public void setUDM(HashMap<String, String> udmlist) {
+    mHasUDM = true;
+    mUDM = udmlist;
+  }
+
+  /**
    * @return thrift representation of the file information
    */
   protected alluxio.thrift.FileInfo toThrift() {
@@ -519,6 +546,9 @@ public final class FileInfo implements Serializable {
         mInMemoryPercentage, mLastModificationTimeMs, mTtl, mOwner, mGroup, mMode,
         mPersistenceState, mMountPoint, fileBlockInfos, ThriftUtils.toThrift(mTtlAction), mMountId,
         mInAlluxioPercentage);
+    if (mHasUDM) {
+      info.setUDM(mUDM);
+    }
     return info;
   }
 
@@ -564,6 +594,7 @@ public final class FileInfo implements Serializable {
         .add("persistenceState", mPersistenceState).add("mountPoint", mMountPoint)
         .add("fileBlockInfos", mFileBlockInfos)
         .add("mountId", mMountId).add("inAlluxioPercentage", mInAlluxioPercentage)
+        .add("User-defined metadata", mUDM)
         .toString();
   }
 }

@@ -16,6 +16,8 @@ import alluxio.wire.LoadMetadataType;
 
 import com.google.common.base.Objects;
 
+import java.util.List;
+import java.util.ArrayList;
 import javax.annotation.concurrent.NotThreadSafe;
 
 /**
@@ -24,6 +26,10 @@ import javax.annotation.concurrent.NotThreadSafe;
 @NotThreadSafe
 public final class ListStatusOptions {
   private LoadMetadataType mLoadMetadataType;
+  public boolean mUDM;
+  private List<String> mUKey;
+  private List<String> mUValue;
+  private List<String> mSelectType;
 
   /**
    * @return the default {@link ListStatusOptions}
@@ -34,6 +40,10 @@ public final class ListStatusOptions {
 
   private ListStatusOptions() {
     mLoadMetadataType = LoadMetadataType.Once;
+    mUDM = false;
+    mUKey = new ArrayList<String>();
+    mUValue = new ArrayList<String>();
+    mSelectType = new ArrayList<String>();
   }
 
   /**
@@ -48,6 +58,33 @@ public final class ListStatusOptions {
     } else if (!options.isLoadDirectChildren()) {
       mLoadMetadataType = LoadMetadataType.Never;
     }
+    if (options.getUKey() != null) {
+      mUDM = true;
+      mUKey = options.getUKey();
+      mUValue = options.getUValue();
+      mSelectType = options.getSType();
+    }
+  }
+
+  /**
+   * @return the selected key
+   */
+  public List<String> getUKey() {
+    return mUKey;
+  }
+
+  /**
+   * @return the selected value
+   */
+  public List<String> getUValue() {
+    return mUValue;
+  }
+
+  /**
+   * @return the query type
+   */
+  public List<String> getSType() {
+    return mSelectType;
   }
 
   /**

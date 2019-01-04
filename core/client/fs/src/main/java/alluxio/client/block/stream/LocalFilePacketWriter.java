@@ -179,6 +179,7 @@ public final class LocalFilePacketWriter implements PacketWriter {
     mCloser = closer;
     mOptions = options;
     mWriter = writer;
+    mClosed = false;
     mCreateRequest = createRequest;
     mNettyRPCContext = nettyRPCContext;
     mPosReserved += FILE_BUFFER_BYTES;

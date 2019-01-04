@@ -21,6 +21,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.google.common.base.Objects;
 
+import java.util.List;
+import java.util.ArrayList;
 import javax.annotation.concurrent.NotThreadSafe;
 
 /**
@@ -31,6 +33,10 @@ import javax.annotation.concurrent.NotThreadSafe;
 @JsonInclude(Include.NON_EMPTY)
 public final class ListStatusOptions {
   private LoadMetadataType mLoadMetadataType;
+  private boolean mUDM;
+  private List<String> mUKey;
+  private List<String> mUValue;
+  private List<String> mSelectType;
 
   /**
    * @return the default {@link ListStatusOptions}
@@ -42,6 +48,23 @@ public final class ListStatusOptions {
   private ListStatusOptions() {
     mLoadMetadataType =
         Configuration.getEnum(PropertyKey.USER_FILE_METADATA_LOAD_TYPE, LoadMetadataType.class);
+    mUDM = false;
+    mUKey = new ArrayList<String>();
+    mUValue = new ArrayList<String>();
+    mSelectType = new ArrayList<String>();
+  }
+
+  /**
+   * Set Query condition.
+   * @param key the selected key
+   * @param value the selected value
+   * @param type the selected type
+   */
+  public void setQuery(String key, String value, String type) {
+    mUDM = true;
+    mUKey.add(key);
+    mUValue.add(value);
+    mSelectType.add(type);
   }
 
   /**
@@ -92,6 +115,9 @@ public final class ListStatusOptions {
     ListStatusTOptions options = new ListStatusTOptions();
     options.setLoadDirectChildren(
         mLoadMetadataType == LoadMetadataType.Once || mLoadMetadataType == LoadMetadataType.Always);
+    if (mUDM) {
+      options.setQuery(mUKey, mUValue, mSelectType);
+    }
 
     options.setLoadMetadataType(LoadMetadataType.toThrift(mLoadMetadataType));
     return options;

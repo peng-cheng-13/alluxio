@@ -23,8 +23,10 @@ import alluxio.wire.FileInfo;
 
 import com.google.common.collect.ImmutableSet;
 
+import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.HashMap;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -47,6 +49,7 @@ public final class InodeDirectory extends Inode<InodeDirectory> {
   private boolean mMountPoint;
 
   private boolean mDirectChildrenLoaded;
+  private HashMap<String, String> mUDM = new HashMap<String, String>();
 
   /**
    * Creates a new instance of {@link InodeDirectory}.
@@ -57,6 +60,36 @@ public final class InodeDirectory extends Inode<InodeDirectory> {
     super(id, true);
     mMountPoint = false;
     mDirectChildrenLoaded = false;
+    mUDM = new HashMap<String, String>();
+  }
+
+  /**
+   * Add user-defined metadata.
+   * @param key the key of user-defined metadata
+   * @param value the value of user-defined metadata
+   */
+  public void addUDM(List<String> key, List<String> value) {
+    int i;
+    for (i = 0; i < key.size(); i++) {
+      mUDM.put(key.get(i), value.get(i));
+    }
+  }
+
+  /**
+   * Delete user-defined metadata.
+   * @param key the key of user-defined metadat to delete
+   */
+  public void deleteUDM(List<String> key) {
+    for (String tmp : key) {
+      mUDM.remove(tmp);
+    }
+  }
+
+  /**
+   * @return the user-defined metadata
+   */
+  public HashMap<String, String> getUDM() {
+    return mUDM;
   }
 
   @Override

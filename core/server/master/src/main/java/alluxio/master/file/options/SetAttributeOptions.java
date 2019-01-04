@@ -18,6 +18,9 @@ import alluxio.wire.TtlAction;
 
 import com.google.common.base.Objects;
 
+import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
 import javax.annotation.concurrent.NotThreadSafe;
 
 /**
@@ -34,6 +37,17 @@ public final class SetAttributeOptions {
   private Short mMode;
   private boolean mRecursive;
   private long mOperationTimeMs;
+  public boolean mShouldindex;
+  private List<Long> mBlockIndexBid = new ArrayList<Long>();
+  private List<Double> mBlockIndexMax = new ArrayList<Double>();
+  private List<Double> mBlockIndexMin = new ArrayList<Double>();
+  private List<String> mBlockIndexVar = new ArrayList<String>();
+  private List<Long> mBlockAugIndex = new ArrayList<Long>();
+  public boolean mUDM;
+  private List<String> mPath = new ArrayList<String>();
+  private List<String> mUKey = new ArrayList<String>();
+  private List<String> mUValue = new ArrayList<String>();
+  public boolean mDeleteAttribute;
 
   /**
    * @return the default {@link SetAttributeOptions}
@@ -57,6 +71,21 @@ public final class SetAttributeOptions {
     mMode = options.isSetMode() ? options.getMode() : Constants.INVALID_MODE;
     mRecursive = options.isRecursive();
     mOperationTimeMs = System.currentTimeMillis();
+    if (options.getIndexInfo_BlockId().size() != 0) {
+      mShouldindex = true;
+      mBlockIndexBid = options.getIndexInfo_BlockId();
+      mBlockIndexMax = options.getIndexInfo_Max();
+      mBlockIndexMin = options.getIndexInfo_Min();
+      mBlockIndexVar = options.getIndexInfo_VarName();
+      mBlockAugIndex = options.getAugIndex();
+    }
+    if (options.getUDM_Key().size() != 0) {
+      mUDM = true;
+      mPath = options.getUDM_Path();
+      mUKey = options.getUDM_Key();
+      mUValue = options.getUDM_Value();
+      mDeleteAttribute = options.deleteUDM();
+    }
   }
 
   private SetAttributeOptions() {
@@ -69,6 +98,111 @@ public final class SetAttributeOptions {
     mMode = Constants.INVALID_MODE;
     mRecursive = false;
     mOperationTimeMs = System.currentTimeMillis();
+    mShouldindex = false;
+    mBlockIndexBid = new ArrayList<Long>();
+    mBlockIndexMax = new ArrayList<Double>();
+    mBlockIndexMin = new ArrayList<Double>();
+    mBlockIndexVar = new ArrayList<String>();
+    mBlockAugIndex = new ArrayList<Long>();
+    mUDM = false;
+    mPath = new ArrayList<String>();
+    mUKey = new ArrayList<String>();
+    mUValue = new ArrayList<String>();
+    mDeleteAttribute = false;
+  }
+
+  /**
+   * @return the user-defined metadata path
+   */
+  public List<String> getUDMPath() {
+    return mPath;
+  }
+
+  /**
+   * @return the user-defined metadata key
+   */
+  public List<String> getUDMKey() {
+    return mUKey;
+  }
+
+  /**
+   * @return the user-defined metadata value
+   */
+  public List<String> getUDMValue() {
+    return mUValue;
+  }
+
+  /**
+   * Set UDM.
+   * @param value the input UDM
+   */
+  public void setUDM(HashMap<String, String> value) {
+    mUDM = true;
+    String[] tmpkey = value.keySet().toArray(new String[value.size()]);
+    String tmpvalue;
+    for (int i = 0; i < value.size(); i++) {
+      mUKey.add(tmpkey[i]);
+      tmpvalue = value.get(tmpkey[i]);
+      mUValue.add(tmpvalue);
+    }
+  }
+
+  /**
+   * Set BlockIndex.
+   * @param id the block id
+   * @param max the max value of current block
+   * @param min the min value of current block
+   * @param var the var name of current block
+   */
+  public void setIndexInfo(List<Long> id, List<Double> max, List<Double> min, List<String> var) {
+    mShouldindex = true;
+    mBlockIndexBid = id;
+    mBlockIndexMax = max;
+    mBlockIndexMin = min;
+    mBlockIndexVar = var;
+  }
+
+  /**
+   * Set AugIndex.
+   * @param augindex the augmented index info
+   */
+  public void setAugIndex(List<Long> augindex) {
+    mBlockAugIndex = augindex;
+  }
+
+  /**
+   * @return the block id
+   */
+  public List<Long> getBlockId() {
+    return mBlockIndexBid;
+  }
+
+  /**
+   * @return the block max value list
+   */
+  public List<Double> getBlockMax() {
+    return mBlockIndexMax;
+  }
+
+  /**
+   * @return the block min value list
+   */
+  public List<Double> getBlockMin() {
+    return mBlockIndexMin;
+  }
+
+  /**
+   * @return the block var name list
+   */
+  public List<String> getBlockVar() {
+    return mBlockIndexVar;
+  }
+
+  /**
+   * @return the augmented index info
+   */
+  public List<Long> getAugIndex() {
+    return mBlockAugIndex;
   }
 
   /**

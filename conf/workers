@@ -10,4 +10,14 @@
 #
 
 # An Alluxio Worker will be started on each of the machines listed below.
-localhost
+#12.11.199.130
+#12.11.199.131
+#12.11.199.132
+10.182.193.2
+
+
+
+
+
+
+

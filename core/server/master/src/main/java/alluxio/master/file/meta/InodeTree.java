@@ -968,11 +968,14 @@ public class InodeTree implements JournalEntryIterable {
    * @param inode the inode to add to the inode tree
    */
   private void addInodeFromJournalInternal(Inode<?> inode) {
+    LOG.info("addInodeFromJournalInternal Debug: 0");
     InodeDirectory parentDirectory = mCachedInode;
+    LOG.info("addInodeFromJournalInternal Debug: 1");
     if (inode.getParentId() != mCachedInode.getId()) {
       parentDirectory = (InodeDirectory) mInodes.getFirst(inode.getParentId());
       mCachedInode = parentDirectory;
     }
+    LOG.info("addInodeFromJournalInternal Debug: 2");
     parentDirectory.addChild(inode);
     mInodes.add(inode);
     // If journal entry has no security enabled, change the replayed inode permission to be 0777
@@ -981,10 +984,12 @@ public class InodeTree implements JournalEntryIterable {
         && inode.getGroup().isEmpty()) {
       inode.setMode(Constants.DEFAULT_FILE_SYSTEM_MODE);
     }
+    LOG.info("addInodeFromJournalInternal Debug: 3");
     // Update indexes.
     if (inode.isFile() && inode.isPinned()) {
       mPinnedInodeFileIds.add(inode.getId());
     }
+    LOG.info("addInodeFromJournalInternal Debug: 4");
   }
 
   /**

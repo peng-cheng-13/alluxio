@@ -32,6 +32,7 @@ import alluxio.exception.status.NotFoundException;
 import alluxio.master.block.BlockId;
 import alluxio.proto.dataserver.Protocol;
 import alluxio.wire.WorkerNetAddress;
+import alluxio.wire.FileBlockInfo;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -40,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -103,7 +105,8 @@ public class FileInStream extends InputStream
 
   /** The read buffer in file seek. This is used in {@link #readCurrentBlockToEnd()}. */
   private byte[] mSeekBuffer;
-
+  private long mQueryLength;
+  private boolean mIsQuery;
   /**
    * Creates a new file input stream.
    *
@@ -137,6 +140,7 @@ public class FileInStream extends InputStream
     mShouldCache = mAlluxioStorageType.isStore();
     mCachePartiallyReadBlock = options.isCachePartiallyReadBlock();
     mClosed = false;
+    mIsQuery = false;
     if (mShouldCache) {
       Preconditions.checkNotNull(options.getCacheLocationPolicy(),
           PreconditionMessage.FILE_WRITE_LOCATION_POLICY_UNSPECIFIED);
@@ -345,7 +349,11 @@ public class FileInStream extends InputStream
    * @return the maximum position to seek to
    */
   protected long maxSeekPosition() {
-    return mFileLength;
+    if (mStatus.isPersisted() && mIsQuery) {
+      return mQueryLength;
+    } else {
+      return mFileLength;
+    }
   }
 
   /**
@@ -429,7 +437,7 @@ public class FileInStream extends InputStream
   /**
    * @return the current block id based on mPos, -1 if at the end of the file
    */
-  private long getCurrentBlockId() {
+  public long getCurrentBlockId() {
     if (remainingInternal() <= 0) {
       return -1;
     }
@@ -598,7 +606,11 @@ public class FileInStream extends InputStream
   }
 
   private long remainingInternal() {
-    return mFileLength - mPos;
+    if (mStatus.isPersisted() && mIsQuery) {
+      return mQueryLength - mPos;
+    } else {
+      return mFileLength - mPos;
+    }
   }
 
   /**
@@ -753,5 +765,23 @@ public class FileInStream extends InputStream
    */
   private void readCurrentBlockToEnd() throws IOException {
     readCurrentBlockToPos(Long.MAX_VALUE);
+  }
+
+  /**
+   * Set queried file length.
+   */
+  protected void setQueryLength() {
+    mIsQuery = true;
+    if (mStatus.isPersisted()) {
+      List<Long> blockids = mStatus.getBlockIds();
+      List<FileBlockInfo> blockinfos = mStatus.getFileBlockInfos();
+      long queryLength = 0;
+      for (FileBlockInfo tmpinfo : blockinfos) {
+        if (blockids.contains(tmpinfo.getBlockInfo().getBlockId())) {
+          queryLength += tmpinfo.getBlockInfo().getLength();
+        }
+      }
+      mQueryLength = queryLength;
+    }
   }
 }

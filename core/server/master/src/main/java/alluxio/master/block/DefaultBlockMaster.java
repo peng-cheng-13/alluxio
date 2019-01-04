@@ -209,8 +209,6 @@ public final class DefaultBlockMaster extends AbstractMaster implements BlockMas
     if (entry.hasBlockContainerIdGenerator()) {
       mJournaledNextContainerId = (entry.getBlockContainerIdGenerator()).getNextContainerId();
       mBlockContainerIdGenerator.setNextContainerId((mJournaledNextContainerId));
-    } else if (entry.hasDeleteBlock()) {
-      mBlocks.remove(entry.getDeleteBlock().getBlockId());
     } else if (entry.hasBlockInfo()) {
       BlockInfoEntry blockInfoEntry = entry.getBlockInfo();
       if (mBlocks.containsKey(blockInfoEntry.getBlockId())) {
@@ -221,8 +219,6 @@ public final class DefaultBlockMaster extends AbstractMaster implements BlockMas
         mBlocks.put(blockInfoEntry.getBlockId(), new MasterBlockInfo(blockInfoEntry.getBlockId(),
             blockInfoEntry.getLength()));
       }
-    } else {
-      throw new IOException(ExceptionMessage.UNEXPECTED_JOURNAL_ENTRY.getMessage(entry));
     }
   }
 

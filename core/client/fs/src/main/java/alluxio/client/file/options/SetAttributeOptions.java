@@ -21,6 +21,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.google.common.base.Objects;
 
+import java.util.List;
+import java.util.ArrayList;
 import javax.annotation.concurrent.NotThreadSafe;
 
 /**
@@ -40,6 +42,17 @@ public final class SetAttributeOptions {
   private String mGroup;
   private Mode mMode;
   private boolean mRecursive;
+  private boolean mShouldindex;
+  private boolean mUDM;
+  private List<Long> mBlockIndexBid;
+  private List<Double> mBlockIndexMax;
+  private List<Double> mBlockIndexMin;
+  private List<String> mBlockIndexVar;
+  private List<Long> mBlockAugIndex;
+  private List<String> mPath;
+  private List<String> mUKey;
+  private List<String> mUValue;
+  private boolean mDeleteAttribute;
 
   /**
    * @return the default {@link SetAttributeOptions}
@@ -57,6 +70,102 @@ public final class SetAttributeOptions {
     mGroup = null;
     mMode = null;
     mRecursive = false;
+    mBlockIndexBid = new ArrayList<Long>();
+    mBlockIndexMax = new ArrayList<Double>();
+    mBlockIndexMin = new ArrayList<Double>();
+    mBlockIndexVar = new ArrayList<String>();
+    mBlockAugIndex = new ArrayList<Long>();
+    mPath = new ArrayList<String>();
+    mUKey = new ArrayList<String>();
+    mUValue = new ArrayList<String>();
+    mShouldindex = false;
+    mUDM = false;
+    mDeleteAttribute = false;
+  }
+
+  /**
+   * Add User-defined metadata.
+   * @param key the key of User-defined metadata
+   * @param value the value of User-defined metadata
+   */
+  public void addUDM(String key, String value) {
+    mUDM = true;
+    mUKey.add(key);
+    mUValue.add(value);
+  }
+
+  /**
+   * Delete User-defined metadata.
+   * @param key the key of User-defined metadata to delete
+   * @param value the value of User-defined metadata to delete
+   */
+  public void deleteDUM(String key, String value) {
+    mUDM = true;
+    mDeleteAttribute = true;
+    mUKey.add(key);
+    mUValue.add(value);
+  }
+
+  /**
+   * Add User-defined metadata to target path.
+   * @param path the file path
+   */
+  public void addUDMPath(String path) {
+    mUDM = true;
+    mPath.add(path);
+  }
+
+  /**
+   * Delete User-defined metadata to target path.
+   * @param path the target file path
+   */
+  public void deleteUDMPath(String path) {
+    mPath.add(path);
+  }
+
+  /**
+   * Add BlockIndex info.
+   * @param bid the block id
+   * @param max the max value of current block
+   * @param min the min value of current block
+   * @param var the var name of current block
+   * @param tmpbitmap the augmented bitmap index
+   */
+  public void addBlockIndex(long bid, double max, double min, String var, long tmpbitmap) {
+    mShouldindex = true;
+    mBlockIndexBid.add(bid);
+    mBlockIndexMax.add(max);
+    mBlockIndexMin.add(min);
+    mBlockIndexVar.add(var);
+    mBlockAugIndex.add(tmpbitmap);
+  }
+
+  /**
+   * @return the block id
+   */
+  public List<Long> getBlockId() {
+    return mBlockIndexBid;
+  }
+
+  /**
+   * @return the block max value list
+   */
+  public List<Double> getBlockMax() {
+    return mBlockIndexMax;
+  }
+
+  /**
+   * @return the block min value list
+   */
+  public List<Double> getBlockMin() {
+    return mBlockIndexMin;
+  }
+
+  /**
+   * @return the block var name list
+   */
+  public List<String> getBlockVar() {
+    return mBlockIndexVar;
   }
 
   /**
@@ -220,6 +329,19 @@ public final class SetAttributeOptions {
     if (mTtl != null) {
       options.setTtl(mTtl);
       options.setTtlAction(ThriftUtils.toThrift(mTtlAction));
+    }
+
+    if (mShouldindex) {
+      options.setIndexInfo(mBlockIndexBid, mBlockIndexMax, mBlockIndexMin, mBlockIndexVar,
+          mBlockAugIndex);
+    }
+
+    if (mUDM) {
+      if (!mDeleteAttribute) {
+        options.setUDM(mPath, mUKey, mUValue);
+      } else {
+        options.deleteUDM(mPath, mUKey, mUValue);
+      }
     }
 
     if (mPersisted != null) {

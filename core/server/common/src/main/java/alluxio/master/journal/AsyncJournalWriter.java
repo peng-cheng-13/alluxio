@@ -94,6 +94,7 @@ public final class AsyncJournalWriter {
      */
     mCounter.incrementAndGet();
     mQueue.offer(entry);
+    //LOG.info("AsyncJournalWriter append once");
     return mCounter.get();
   }
 
@@ -104,6 +105,7 @@ public final class AsyncJournalWriter {
    * @param targetCounter the counter to flush
    */
   public void flush(final long targetCounter) throws IOException {
+    //LOG.info("AsyncJournalWriter flush once");
     if (targetCounter <= mFlushCounter.get()) {
       return;
     }

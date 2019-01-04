@@ -11,8 +11,8 @@
 
 package alluxio.fuse;
 
-import static jnr.constants.platform.OpenFlags.O_RDONLY;
-import static jnr.constants.platform.OpenFlags.O_WRONLY;
+//import static jnr.constants.platform.OpenFlags.O_RDONLY;
+//import static jnr.constants.platform.OpenFlags.O_WRONLY;
 
 import alluxio.AlluxioURI;
 import alluxio.Configuration;
@@ -23,12 +23,16 @@ import alluxio.exception.AlluxioException;
 import alluxio.exception.FileAlreadyExistsException;
 import alluxio.exception.FileDoesNotExistException;
 import alluxio.exception.InvalidPathException;
+import alluxio.client.file.options.CreateFileOptions;
+import alluxio.client.file.policy.SpecificHostPolicy;
+//import alluxio.client.file.policy.RoundRobinPolicy;
 
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import jnr.constants.platform.OpenFlags;
+import com.google.common.collect.ImmutableMap;
+//import jnr.constants.platform.OpenFlags;
 import jnr.ffi.Pointer;
 import jnr.ffi.types.mode_t;
 import jnr.ffi.types.off_t;
@@ -49,7 +53,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.concurrent.ThreadSafe;
-
 /**
  * Main FUSE implementation class.
  *
@@ -73,6 +76,7 @@ final class AlluxioFuseFileSystem extends FuseStubFS {
 
   // Table of open files with corresponding InputStreams and OutputStreams
   private final Map<Long, OpenFileEntry> mOpenFiles;
+  private final Map<Long, OpenFileMode> mFileMode;
   private long mNextOpenFileId;
 
   /**
@@ -87,6 +91,7 @@ final class AlluxioFuseFileSystem extends FuseStubFS {
     mAlluxioRootPath = Paths.get(opts.getAlluxioRoot());
     mNextOpenFileId = 0L;
     mOpenFiles = new HashMap<>();
+    mFileMode = new HashMap<>();
 
     final int maxCachedPaths = Configuration.getInt(PropertyKey.FUSE_CACHED_PATHS_MAX);
     mPathResolverCache = CacheBuilder.newBuilder()
@@ -114,12 +119,6 @@ final class AlluxioFuseFileSystem extends FuseStubFS {
     final int flags = fi.flags.get();
     LOG.trace("create({}, {}) [Alluxio: {}]", path, Integer.toHexString(flags), turi);
     final int openFlag = flags & 3;
-    if (openFlag != O_WRONLY.intValue()) {
-      OpenFlags flag = OpenFlags.valueOf(openFlag);
-      LOG.error("Passed a {} flag to create(). Files can only be created in O_WRONLY mode ({})",
-          flag.toString(), path);
-      return -ErrorCodes.EACCES();
-    }
 
     try {
       synchronized (mOpenFiles) {
@@ -128,8 +127,8 @@ final class AlluxioFuseFileSystem extends FuseStubFS {
               turi, MAX_OPEN_FILES);
           return -ErrorCodes.EMFILE();
         }
-
-        final OpenFileEntry ofe = new OpenFileEntry(null, mFileSystem.createFile(turi));
+        CreateFileOptions options = CreateFileOptions.defaults();
+        final OpenFileEntry ofe = new OpenFileEntry(null, mFileSystem.createFile(turi, options));
         LOG.debug("Alluxio OutStream created for {}", path);
         mOpenFiles.put(mNextOpenFileId, ofe);
         fi.fh.set(mNextOpenFileId);
@@ -312,10 +311,10 @@ final class AlluxioFuseFileSystem extends FuseStubFS {
     final int flags = fi.flags.get();
     LOG.trace("open({}, 0x{}) [Alluxio: {}]", path, Integer.toHexString(flags), turi);
 
-    if ((flags & 3) != O_RDONLY.intValue()) {
-      LOG.error("Files can only be opened in O_RDONLY mode ({})", path);
-      return -ErrorCodes.EACCES();
-    }
+    //if ((flags & 3) != O_RDONLY.intValue()) {
+      //LOG.error("Files can only be opened in O_RDONLY mode ({})", path);
+      //return -ErrorCodes.EACCES();
+    //}
     try {
       if (!mFileSystem.exists(turi)) {
         LOG.error("File {} does not exist", turi);
@@ -394,8 +393,30 @@ final class AlluxioFuseFileSystem extends FuseStubFS {
     int rd = 0;
     int nread = 0;
     if (oe.getIn() == null) {
-      LOG.error("{} was not open for reading", path);
-      return -ErrorCodes.EBADFD();
+      /*Author:Chengpeng---*/
+      if (oe.getOut() != null) {
+        try {
+          oe.getOut().flush();
+        } catch (IOException e) {
+          return -ErrorCodes.EIO();
+        }
+      } else {
+        LOG.debug("Not flushing: {} was not open for writing", path);
+      }
+      try {
+        oe.close();
+        final AlluxioURI turi = mPathResolverCache.getUnchecked(path);
+        oe.addIn(mFileSystem.openFile(turi));
+      } catch (IOException e) {
+        LOG.error("Failed closing {} [in]", path, e);
+      } catch (FileDoesNotExistException e) {
+        LOG.debug("File does not exist {}", path, e);
+        return -ErrorCodes.ENOENT();
+      } catch (AlluxioException e) {
+        LOG.error("AlluxioException on {}", path, e);
+        return -ErrorCodes.EFAULT();
+      }
+      /*---Author:Chengpeng*/
     }
     try {
       oe.getIn().seek(offset);
@@ -500,6 +521,9 @@ final class AlluxioFuseFileSystem extends FuseStubFS {
     }
 
     try {
+      if (oe.getmArrayLength() != 0) {
+        oe.getOut().write(oe.getmIoArray(), 0, oe.getmArrayLength());
+      }
       oe.close();
     } catch (IOException e) {
       LOG.error("Failed closing {} [in]", path, e);
@@ -558,6 +582,83 @@ final class AlluxioFuseFileSystem extends FuseStubFS {
   }
 
   /**
+   * Set Data Access Pattern (DAP) and Tier info for an open Alluxio file.
+   *
+   * @param path the FS path of the file
+   * @param name the name of the attribute
+   * @param value the value of the attribute
+   * @param size the size of the attribute
+   * @param flags the flags of the file
+   * @return 0 on success, a negative value on error
+   */
+  @Override
+  public int setxattr(String path, String name, Pointer value, @size_t long size, int flags) {
+    final AlluxioURI turi = mPathResolverCache.getUnchecked(path);
+    long mfid;
+    try {
+      if (!mFileSystem.exists(turi)) {
+        LOG.error("File {} does not exist", turi);
+        return -ErrorCodes.ENOENT();
+      }
+      final URIStatus status = mFileSystem.getStatus(turi);
+      if (status.isFolder()) {
+        LOG.error("File {} is a directory", turi);
+        return -ErrorCodes.EISDIR();
+      }
+      mfid = status.getFileId();
+    } catch (FileDoesNotExistException e) {
+      LOG.debug("File does not exist {}", path, e);
+      return -ErrorCodes.ENOENT();
+    } catch (IOException e) {
+      LOG.error("IOException on {}", path, e);
+      return -ErrorCodes.EIO();
+    } catch (AlluxioException e) {
+      LOG.error("AlluxioException on {}", path, e);
+      return -ErrorCodes.EFAULT();
+    } catch (Throwable e) {
+      LOG.error("Unexpected exception on {}", path, e);
+      return -ErrorCodes.EFAULT();
+    }
+
+    if (name.equals("DAP")) {
+      String mdap = value.getString(0);
+      OpenFileMode ofm = null;
+      switch (mdap) {
+        case "P": {
+          ofm = new OpenFileMode("P", null);
+          break;
+        }
+        case "S": {
+          ofm = new OpenFileMode("S", null);
+          break;
+        }
+        case "G": {
+          ofm = new OpenFileMode("G", null);
+          break;
+        }
+        case "R": {
+          ofm = new OpenFileMode("R", null);
+          break;
+        }
+        case "M": {
+          ofm = new OpenFileMode("M", null);
+          break;
+        }
+        default : {
+          LOG.error("Error:Unrecognized DAP value", turi);
+        }
+      }
+      if (ofm != null) {
+        mFileMode.put(mfid, ofm);
+      }
+      return 0;
+    }
+
+    LOG.error("Attribute must be 'DAP' or 'Tier'", turi);
+    return -1;
+  }
+
+  /**
    * Deletes a file from the FS.
    *
    * @param path the FS path of the file
@@ -588,29 +689,178 @@ final class AlluxioFuseFileSystem extends FuseStubFS {
       return ErrorCodes.EIO();
     }
     LOG.trace("write({}, {}, {})", path, size, offset);
+    //LOG.info("write({}, {}, {})", path, size, offset);
     final int sz = (int) size;
+    int myfilesize = 0;
+    int maxWrite = 2097152;
+    boolean rewrite = false;
+    byte[] destr = null;
     final long fd = fi.fh.get();
     OpenFileEntry oe;
+    OpenFileMode ofm;
+    //LoadBalanceStrategy mLBS = new LoadBalanceStrategy();
+    final AlluxioURI turi;
+    final URIStatus status;
     synchronized (mOpenFiles) {
       oe = mOpenFiles.get(fd);
     }
-    if (oe == null) {
-      LOG.error("Cannot find fd for {} in table", path);
-      return -ErrorCodes.EBADFD();
+    try {
+      turi = mPathResolverCache.getUnchecked(path);
+      status = mFileSystem.getStatus(turi);
+      final long mfileid = status.getFileId();
+      synchronized (mFileMode) {
+        ofm = mFileMode.get(mfileid);
+      }
+    } catch (FileDoesNotExistException e) {
+      LOG.debug("File does not exist {}", path, e);
+      return -ErrorCodes.ENOENT();
+    } catch (IOException e) {
+      LOG.error("IOException on {}", path, e);
+      return -ErrorCodes.EIO();
+    } catch (AlluxioException e) {
+      LOG.error("AlluxioException on {}", path, e);
+      return -ErrorCodes.EFAULT();
     }
 
     if (oe.getOut() == null) {
-      LOG.error("{} was not open for writing", path);
-      return -ErrorCodes.EBADFD();
+      //LOG.error("{} was not open for writing", path);
+      //return -ErrorCodes.EBADFD();
+      /*Author:Chengpeng---*/
+      try {
+        myfilesize = (int) status.getLength();
+        rewrite = true;
+        int rd = 0;
+        int nread = 0;
+        destr = new byte[myfilesize + sz];
+        oe.getIn().seek(0);
+        while (rd >= 0 && nread < myfilesize) {
+          rd = oe.getIn().read(destr, nread, myfilesize - nread);
+          if (rd >= 0) {
+            nread += rd;
+          }
+        }
+        oe.close();
+        mFileSystem.delete(turi);
+        oe.addOut(mFileSystem.createFile(turi));
+      } catch (IOException e) {
+        LOG.error("IOException on {}", path, e);
+        return -ErrorCodes.EIO();
+      } catch (AlluxioException e) {
+        LOG.error("AlluxioException on {}", path, e);
+        return -ErrorCodes.EFAULT();
+      }
+      /*---Author:Chengpeng*/
     }
 
-    try {
-      final byte[] dest = new byte[sz];
-      buf.get(0, dest, 0, sz);
-      oe.getOut().write(dest);
-    } catch (IOException e) {
-      LOG.error("IOException while writing to {}.", path, e);
-      return -ErrorCodes.EIO();
+    if (ofm == null) {
+      try {
+        if (!rewrite) {
+          if (offset != 0) {
+            if (oe.getmArrayLength() + sz <= maxWrite) {
+              //LOG.info("write data to IoArray(current offset is {})", oe.getmArrayLength());
+              buf.get(0, oe.getmIoArray(), oe.getmArrayLength(), sz);
+              oe.setmArrayLength(oe.getmArrayLength() + sz);
+              //LOG.info("write {} data to IoArray from {}", sz, oe.getmArrayLength());
+            } else {
+              //LOG.info("write IoArray(size is {})", oe.getmArrayLength());
+              oe.getOut().write(oe.getmIoArray(), 0, oe.getmArrayLength());
+              buf.get(0, oe.getmIoArray(), 0, sz);
+              //LOG.info("write data to IoArray(current offset is 0, size is {})", size);
+              oe.setmArrayLength(sz);
+            }
+          } else {
+            //LOG.info("write with offset 0");
+            final byte[] dest = new byte[sz];
+            buf.get(0, dest, 0, sz);
+            oe.getOut().write(dest, 0, dest.length);
+          }
+        } else {
+          buf.get(0, destr, myfilesize, sz);
+          oe.getOut().write(destr, 0, destr.length);
+        }
+      } catch (IOException e) {
+        LOG.error("IOException while writing to {}.", path, e);
+        return -ErrorCodes.EIO();
+      }
+    } else {
+      String mdap = ofm.getDAP();
+      if (mdap == null) {
+        LOG.error("Can not find data access pattern for file", path);
+        return -ErrorCodes.EBADFD();
+      }
+      try {
+        switch (mdap) {
+          case "P": {
+            Configuration.merge(ImmutableMap.of(
+                PropertyKey.USER_BLOCK_SIZE_BYTES_DEFAULT, "512MB",
+                PropertyKey.USER_FILE_WRITE_TIER_DEFAULT, "0"));
+            break;
+          }
+          case "S": {
+            oe.close();
+            mFileSystem.delete(turi);
+            String mBlocksize = String.valueOf(size / 8);
+            String mtier = String.valueOf(LoadBalanceStrategy.RoundRobin());
+            Configuration.merge(ImmutableMap.of(
+                PropertyKey.USER_FILE_WRITE_TIER_DEFAULT, mtier,
+                PropertyKey.USER_BLOCK_SIZE_BYTES_DEFAULT, mBlocksize));
+            //Configuration.merge(ImmutableMap.of(PropertyKey.USER_FILE_WRITE_LOCATION_POLICY,
+                //"RoundRobinPolicy"));
+            oe.addOut(mFileSystem.createFile(turi));
+            break;
+          }
+          case "G": {
+            oe.close();
+            mFileSystem.delete(turi);
+            String mtier = String.valueOf(LoadBalanceStrategy.RoundRobin());
+            Configuration.merge(ImmutableMap.of(PropertyKey.USER_FILE_WRITE_TIER_DEFAULT, mtier));
+            SpecificHostPolicy policy = new SpecificHostPolicy("cn17636");
+            CreateFileOptions options = CreateFileOptions.defaults();
+            options.setLocationPolicy(policy);
+            oe.addOut(mFileSystem.createFile(turi, options));
+            break;
+          }
+          case "R": {
+            oe.close();
+            mFileSystem.delete(turi);
+            String mtier = String.valueOf(LoadBalanceStrategy.MaxFree());
+            Configuration.merge(ImmutableMap.of(PropertyKey.USER_FILE_WRITE_TIER_DEFAULT, mtier));
+            SpecificHostPolicy policy = new SpecificHostPolicy("cn17636");
+            CreateFileOptions options = CreateFileOptions.defaults();
+            options.setLocationPolicy(policy);
+            oe.addOut(mFileSystem.createFile(turi, options));
+            break;
+          }
+          case "M": {
+            if (size > 1024 * 1024) {
+              String mtier = String.valueOf(LoadBalanceStrategy.RoundRobin());
+              Configuration.merge(ImmutableMap.of(PropertyKey.USER_FILE_WRITE_TIER_DEFAULT, mtier));
+            }
+            break;
+          } default : {
+            LOG.error("Error : Unrecognized data access pattern for file", path);
+            return -ErrorCodes.EBADFD();
+          }
+        }
+        if (!rewrite) {
+          final byte[] dest = new byte[sz];
+          buf.get(0, dest, 0, sz);
+          oe.getOut().write(dest, myfilesize, dest.length);
+        } else {
+          buf.get(0, destr, myfilesize, sz);
+          oe.getOut().write(destr, 0, destr.length);
+        }
+
+      } catch (IOException e) {
+        LOG.error("IOException while writing to {}.", path, e);
+        return -ErrorCodes.EBADFD();
+      } catch (FileDoesNotExistException e) {
+        LOG.debug("File does not exist {}", path, e);
+        return -ErrorCodes.ENOENT();
+      } catch (AlluxioException e) {
+        LOG.error("AlluxioException on {}", path, e);
+        return -ErrorCodes.EFAULT();
+      }
     }
 
     return sz;
