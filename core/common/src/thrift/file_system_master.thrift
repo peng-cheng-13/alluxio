@@ -54,6 +54,11 @@ enum LoadMetadataTType {
 
 struct GetStatusTOptions {
   1: optional LoadMetadataTType loadMetadataType
+  2: optional string varname
+  3: optional double query_max
+  4: optional double query_min
+  5: optional bool isQuery
+  6: optional bool query_augmented
 }
 struct GetStatusTResponse {
   1: FileInfo fileInfo
@@ -68,6 +73,9 @@ struct ListStatusTOptions {
   // This is deprecated since 1.1.1 and will be removed in 2.0. Use loadMetadataType.
   1: optional bool loadDirectChildren
   2: optional LoadMetadataTType loadMetadataType
+  3: optional list<string> mUKey
+  4: optional list<string> mUValue
+  5: optional list<string> mSelectType
 }
 struct ListStatusTResponse {
   1: list<FileInfo> fileInfoList
@@ -168,7 +176,18 @@ struct SetAttributeTOptions {
   6: optional i16 mode
   7: optional bool recursive
   8: optional common.TTtlAction ttlAction
+  9: optional list<i64> mIndexInfo_BlockId
+  10: optional list<double> mIndexInfo_MaxValue
+  11: optional list<double> mIndexInfo_MinValue
+  12: optional list<string> mIndexInfo_VarName
+  13: optional list<i64> mAugIndex
+  14: optional list<string> mPath
+  15: optional list<string> mUKey
+  16: optional list<string> mUValue
+  17: optional bool mDeleteAttribute
+  18: optional list<common.H5DatasetInfo> dataset
 }
+
 struct SetAttributeTResponse {}
 
 struct ScheduleAsyncPersistenceTOptions {}

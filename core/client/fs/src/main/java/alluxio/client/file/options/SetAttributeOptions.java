@@ -14,6 +14,8 @@ package alluxio.client.file.options;
 import alluxio.annotation.PublicApi;
 import alluxio.security.authorization.Mode;
 import alluxio.thrift.SetAttributeTOptions;
+import alluxio.thrift.H5DatasetInfo;
+import alluxio.wire.HDFDataSet;
 import alluxio.wire.ThriftUtils;
 import alluxio.wire.TtlAction;
 
@@ -53,6 +55,8 @@ public final class SetAttributeOptions {
   private List<String> mUKey;
   private List<String> mUValue;
   private boolean mDeleteAttribute;
+  private boolean mHasH5Dataset;
+  private List<HDFDataSet> mH5Dateset;
 
   /**
    * @return the default {@link SetAttributeOptions}
@@ -81,6 +85,17 @@ public final class SetAttributeOptions {
     mShouldindex = false;
     mUDM = false;
     mDeleteAttribute = false;
+    mHasH5Dataset = false;
+    mH5Dateset  = new ArrayList<HDFDataSet>();
+  }
+
+  /**
+   * Add H5 Dataset info.
+   * @param value the input dataset info
+   */
+  public void addH5(List<HDFDataSet> value) {
+    mHasH5Dataset = true;
+    mH5Dateset = value;
   }
 
   /**
@@ -329,6 +344,17 @@ public final class SetAttributeOptions {
     if (mTtl != null) {
       options.setTtl(mTtl);
       options.setTtlAction(ThriftUtils.toThrift(mTtlAction));
+    }
+
+    if (mHasH5Dataset) {
+      List<H5DatasetInfo> datasetList = new ArrayList<>();
+      H5DatasetInfo tmpinfo;
+      for (int i = 0; i < mH5Dateset.size(); i++) {
+        tmpinfo = mH5Dateset.get(i).toThrift();
+        datasetList.add(tmpinfo);
+      }
+      options.setDatasetIsSet(true);
+      options.setDataset(datasetList);
     }
 
     if (mShouldindex) {

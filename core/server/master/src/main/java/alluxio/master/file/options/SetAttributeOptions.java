@@ -13,6 +13,8 @@ package alluxio.master.file.options;
 
 import alluxio.Constants;
 import alluxio.thrift.SetAttributeTOptions;
+import alluxio.thrift.H5DatasetInfo;
+import alluxio.wire.HDFDataSet;
 import alluxio.wire.ThriftUtils;
 import alluxio.wire.TtlAction;
 
@@ -48,6 +50,8 @@ public final class SetAttributeOptions {
   private List<String> mUKey = new ArrayList<String>();
   private List<String> mUValue = new ArrayList<String>();
   public boolean mDeleteAttribute;
+  public boolean mHasH5Dataset = false;
+  public List<HDFDataSet> mH5Dateset = new ArrayList<>();
 
   /**
    * @return the default {@link SetAttributeOptions}
@@ -85,6 +89,18 @@ public final class SetAttributeOptions {
       mUKey = options.getMUKey();
       mUValue = options.getMUValue();
       mDeleteAttribute = options.mDeleteAttribute;
+    }
+    if (options.isSetDataset()) {
+      mHasH5Dataset = true;
+      List<H5DatasetInfo> datasetinfo = options.getDataset();
+      H5DatasetInfo tmpinfo;
+      HDFDataSet tmp;
+      for (int i = 0; i < datasetinfo.size(); i++) {
+        tmpinfo = datasetinfo.get(i);
+        tmp = new HDFDataSet(tmpinfo.getName(), tmpinfo.getSize(), tmpinfo.getDatatype());
+        tmp.setUDM(tmpinfo.getAttributes());
+        mH5Dateset.add(tmp);
+      }
     }
   }
 

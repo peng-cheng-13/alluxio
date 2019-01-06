@@ -55,6 +55,7 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
   private static final org.apache.thrift.protocol.TField M_UKEY_FIELD_DESC = new org.apache.thrift.protocol.TField("mUKey", org.apache.thrift.protocol.TType.LIST, (short)15);
   private static final org.apache.thrift.protocol.TField M_UVALUE_FIELD_DESC = new org.apache.thrift.protocol.TField("mUValue", org.apache.thrift.protocol.TType.LIST, (short)16);
   private static final org.apache.thrift.protocol.TField M_DELETE_ATTRIBUTE_FIELD_DESC = new org.apache.thrift.protocol.TField("mDeleteAttribute", org.apache.thrift.protocol.TType.BOOL, (short)17);
+  private static final org.apache.thrift.protocol.TField DATASET_FIELD_DESC = new org.apache.thrift.protocol.TField("dataset", org.apache.thrift.protocol.TType.LIST, (short)18);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -83,6 +84,7 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
   public List<String> mUKey; // optional
   public List<String> mUValue; // optional
   public boolean mDeleteAttribute; // optional
+  public List<alluxio.thrift.H5DatasetInfo> dataset; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -106,7 +108,8 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
     M_PATH((short)14, "mPath"),
     M_UKEY((short)15, "mUKey"),
     M_UVALUE((short)16, "mUValue"),
-    M_DELETE_ATTRIBUTE((short)17, "mDeleteAttribute");
+    M_DELETE_ATTRIBUTE((short)17, "mDeleteAttribute"),
+    DATASET((short)18, "dataset");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -155,6 +158,8 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
           return M_UVALUE;
         case 17: // M_DELETE_ATTRIBUTE
           return M_DELETE_ATTRIBUTE;
+        case 18: // DATASET
+          return DATASET;
         default:
           return null;
       }
@@ -202,7 +207,7 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
   private static final int __RECURSIVE_ISSET_ID = 4;
   private static final int __MDELETEATTRIBUTE_ISSET_ID = 5;
   private byte __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.PINNED,_Fields.TTL,_Fields.PERSISTED,_Fields.OWNER,_Fields.GROUP,_Fields.MODE,_Fields.RECURSIVE,_Fields.TTL_ACTION,_Fields.M_INDEX_INFO__BLOCK_ID,_Fields.M_INDEX_INFO__MAX_VALUE,_Fields.M_INDEX_INFO__MIN_VALUE,_Fields.M_INDEX_INFO__VAR_NAME,_Fields.M_AUG_INDEX,_Fields.M_PATH,_Fields.M_UKEY,_Fields.M_UVALUE,_Fields.M_DELETE_ATTRIBUTE};
+  private static final _Fields optionals[] = {_Fields.PINNED,_Fields.TTL,_Fields.PERSISTED,_Fields.OWNER,_Fields.GROUP,_Fields.MODE,_Fields.RECURSIVE,_Fields.TTL_ACTION,_Fields.M_INDEX_INFO__BLOCK_ID,_Fields.M_INDEX_INFO__MAX_VALUE,_Fields.M_INDEX_INFO__MIN_VALUE,_Fields.M_INDEX_INFO__VAR_NAME,_Fields.M_AUG_INDEX,_Fields.M_PATH,_Fields.M_UKEY,_Fields.M_UVALUE,_Fields.M_DELETE_ATTRIBUTE,_Fields.DATASET};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -248,6 +253,9 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
             new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
     tmpMap.put(_Fields.M_DELETE_ATTRIBUTE, new org.apache.thrift.meta_data.FieldMetaData("mDeleteAttribute", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
+    tmpMap.put(_Fields.DATASET, new org.apache.thrift.meta_data.FieldMetaData("dataset", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
+            new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, alluxio.thrift.H5DatasetInfo.class))));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(SetAttributeTOptions.class, metaDataMap);
   }
@@ -307,6 +315,13 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
       this.mUValue = __this__mUValue;
     }
     this.mDeleteAttribute = other.mDeleteAttribute;
+    if (other.isSetDataset()) {
+      List<alluxio.thrift.H5DatasetInfo> __this__dataset = new ArrayList<alluxio.thrift.H5DatasetInfo>(other.dataset.size());
+      for (alluxio.thrift.H5DatasetInfo other_element : other.dataset) {
+        __this__dataset.add(new alluxio.thrift.H5DatasetInfo(other_element));
+      }
+      this.dataset = __this__dataset;
+    }
   }
 
   public SetAttributeTOptions deepCopy() {
@@ -338,6 +353,7 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
     this.mUValue = null;
     setMDeleteAttributeIsSet(false);
     this.mDeleteAttribute = false;
+    this.dataset = null;
   }
 
   public boolean isPinned() {
@@ -870,6 +886,45 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
     __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __MDELETEATTRIBUTE_ISSET_ID, value);
   }
 
+  public int getDatasetSize() {
+    return (this.dataset == null) ? 0 : this.dataset.size();
+  }
+
+  public java.util.Iterator<alluxio.thrift.H5DatasetInfo> getDatasetIterator() {
+    return (this.dataset == null) ? null : this.dataset.iterator();
+  }
+
+  public void addToDataset(alluxio.thrift.H5DatasetInfo elem) {
+    if (this.dataset == null) {
+      this.dataset = new ArrayList<alluxio.thrift.H5DatasetInfo>();
+    }
+    this.dataset.add(elem);
+  }
+
+  public List<alluxio.thrift.H5DatasetInfo> getDataset() {
+    return this.dataset;
+  }
+
+  public SetAttributeTOptions setDataset(List<alluxio.thrift.H5DatasetInfo> dataset) {
+    this.dataset = dataset;
+    return this;
+  }
+
+  public void unsetDataset() {
+    this.dataset = null;
+  }
+
+  /** Returns true if field dataset is set (has been assigned a value) and false otherwise */
+  public boolean isSetDataset() {
+    return this.dataset != null;
+  }
+
+  public void setDatasetIsSet(boolean value) {
+    if (!value) {
+      this.dataset = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
     case PINNED:
@@ -1008,6 +1063,14 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
       }
       break;
 
+    case DATASET:
+      if (value == null) {
+        unsetDataset();
+      } else {
+        setDataset((List<alluxio.thrift.H5DatasetInfo>)value);
+      }
+      break;
+
     }
   }
 
@@ -1064,6 +1127,9 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
     case M_DELETE_ATTRIBUTE:
       return isMDeleteAttribute();
 
+    case DATASET:
+      return getDataset();
+
     }
     throw new IllegalStateException();
   }
@@ -1109,6 +1175,8 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
       return isSetMUValue();
     case M_DELETE_ATTRIBUTE:
       return isSetMDeleteAttribute();
+    case DATASET:
+      return isSetDataset();
     }
     throw new IllegalStateException();
   }
@@ -1279,6 +1347,15 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
         return false;
     }
 
+    boolean this_present_dataset = true && this.isSetDataset();
+    boolean that_present_dataset = true && that.isSetDataset();
+    if (this_present_dataset || that_present_dataset) {
+      if (!(this_present_dataset && that_present_dataset))
+        return false;
+      if (!this.dataset.equals(that.dataset))
+        return false;
+    }
+
     return true;
   }
 
@@ -1370,6 +1447,11 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
     list.add(present_mDeleteAttribute);
     if (present_mDeleteAttribute)
       list.add(mDeleteAttribute);
+
+    boolean present_dataset = true && (isSetDataset());
+    list.add(present_dataset);
+    if (present_dataset)
+      list.add(dataset);
 
     return list.hashCode();
   }
@@ -1552,6 +1634,16 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
         return lastComparison;
       }
     }
+    lastComparison = Boolean.valueOf(isSetDataset()).compareTo(other.isSetDataset());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetDataset()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.dataset, other.dataset);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     return 0;
   }
 
@@ -1717,6 +1809,16 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
       sb.append(this.mDeleteAttribute);
       first = false;
     }
+    if (isSetDataset()) {
+      if (!first) sb.append(", ");
+      sb.append("dataset:");
+      if (this.dataset == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.dataset);
+      }
+      first = false;
+    }
     sb.append(")");
     return sb.toString();
   }
@@ -1829,13 +1931,13 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
           case 9: // M_INDEX_INFO__BLOCK_ID
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list94 = iprot.readListBegin();
-                struct.mIndexInfo_BlockId = new ArrayList<Long>(_list94.size);
-                long _elem95;
-                for (int _i96 = 0; _i96 < _list94.size; ++_i96)
+                org.apache.thrift.protocol.TList _list118 = iprot.readListBegin();
+                struct.mIndexInfo_BlockId = new ArrayList<Long>(_list118.size);
+                long _elem119;
+                for (int _i120 = 0; _i120 < _list118.size; ++_i120)
                 {
-                  _elem95 = iprot.readI64();
-                  struct.mIndexInfo_BlockId.add(_elem95);
+                  _elem119 = iprot.readI64();
+                  struct.mIndexInfo_BlockId.add(_elem119);
                 }
                 iprot.readListEnd();
               }
@@ -1847,13 +1949,13 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
           case 10: // M_INDEX_INFO__MAX_VALUE
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list97 = iprot.readListBegin();
-                struct.mIndexInfo_MaxValue = new ArrayList<Double>(_list97.size);
-                double _elem98;
-                for (int _i99 = 0; _i99 < _list97.size; ++_i99)
+                org.apache.thrift.protocol.TList _list121 = iprot.readListBegin();
+                struct.mIndexInfo_MaxValue = new ArrayList<Double>(_list121.size);
+                double _elem122;
+                for (int _i123 = 0; _i123 < _list121.size; ++_i123)
                 {
-                  _elem98 = iprot.readDouble();
-                  struct.mIndexInfo_MaxValue.add(_elem98);
+                  _elem122 = iprot.readDouble();
+                  struct.mIndexInfo_MaxValue.add(_elem122);
                 }
                 iprot.readListEnd();
               }
@@ -1865,13 +1967,13 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
           case 11: // M_INDEX_INFO__MIN_VALUE
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list100 = iprot.readListBegin();
-                struct.mIndexInfo_MinValue = new ArrayList<Double>(_list100.size);
-                double _elem101;
-                for (int _i102 = 0; _i102 < _list100.size; ++_i102)
+                org.apache.thrift.protocol.TList _list124 = iprot.readListBegin();
+                struct.mIndexInfo_MinValue = new ArrayList<Double>(_list124.size);
+                double _elem125;
+                for (int _i126 = 0; _i126 < _list124.size; ++_i126)
                 {
-                  _elem101 = iprot.readDouble();
-                  struct.mIndexInfo_MinValue.add(_elem101);
+                  _elem125 = iprot.readDouble();
+                  struct.mIndexInfo_MinValue.add(_elem125);
                 }
                 iprot.readListEnd();
               }
@@ -1883,13 +1985,13 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
           case 12: // M_INDEX_INFO__VAR_NAME
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list103 = iprot.readListBegin();
-                struct.mIndexInfo_VarName = new ArrayList<String>(_list103.size);
-                String _elem104;
-                for (int _i105 = 0; _i105 < _list103.size; ++_i105)
+                org.apache.thrift.protocol.TList _list127 = iprot.readListBegin();
+                struct.mIndexInfo_VarName = new ArrayList<String>(_list127.size);
+                String _elem128;
+                for (int _i129 = 0; _i129 < _list127.size; ++_i129)
                 {
-                  _elem104 = iprot.readString();
-                  struct.mIndexInfo_VarName.add(_elem104);
+                  _elem128 = iprot.readString();
+                  struct.mIndexInfo_VarName.add(_elem128);
                 }
                 iprot.readListEnd();
               }
@@ -1901,13 +2003,13 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
           case 13: // M_AUG_INDEX
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list106 = iprot.readListBegin();
-                struct.mAugIndex = new ArrayList<Long>(_list106.size);
-                long _elem107;
-                for (int _i108 = 0; _i108 < _list106.size; ++_i108)
+                org.apache.thrift.protocol.TList _list130 = iprot.readListBegin();
+                struct.mAugIndex = new ArrayList<Long>(_list130.size);
+                long _elem131;
+                for (int _i132 = 0; _i132 < _list130.size; ++_i132)
                 {
-                  _elem107 = iprot.readI64();
-                  struct.mAugIndex.add(_elem107);
+                  _elem131 = iprot.readI64();
+                  struct.mAugIndex.add(_elem131);
                 }
                 iprot.readListEnd();
               }
@@ -1919,13 +2021,13 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
           case 14: // M_PATH
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list109 = iprot.readListBegin();
-                struct.mPath = new ArrayList<String>(_list109.size);
-                String _elem110;
-                for (int _i111 = 0; _i111 < _list109.size; ++_i111)
+                org.apache.thrift.protocol.TList _list133 = iprot.readListBegin();
+                struct.mPath = new ArrayList<String>(_list133.size);
+                String _elem134;
+                for (int _i135 = 0; _i135 < _list133.size; ++_i135)
                 {
-                  _elem110 = iprot.readString();
-                  struct.mPath.add(_elem110);
+                  _elem134 = iprot.readString();
+                  struct.mPath.add(_elem134);
                 }
                 iprot.readListEnd();
               }
@@ -1937,13 +2039,13 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
           case 15: // M_UKEY
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list112 = iprot.readListBegin();
-                struct.mUKey = new ArrayList<String>(_list112.size);
-                String _elem113;
-                for (int _i114 = 0; _i114 < _list112.size; ++_i114)
+                org.apache.thrift.protocol.TList _list136 = iprot.readListBegin();
+                struct.mUKey = new ArrayList<String>(_list136.size);
+                String _elem137;
+                for (int _i138 = 0; _i138 < _list136.size; ++_i138)
                 {
-                  _elem113 = iprot.readString();
-                  struct.mUKey.add(_elem113);
+                  _elem137 = iprot.readString();
+                  struct.mUKey.add(_elem137);
                 }
                 iprot.readListEnd();
               }
@@ -1955,13 +2057,13 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
           case 16: // M_UVALUE
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list115 = iprot.readListBegin();
-                struct.mUValue = new ArrayList<String>(_list115.size);
-                String _elem116;
-                for (int _i117 = 0; _i117 < _list115.size; ++_i117)
+                org.apache.thrift.protocol.TList _list139 = iprot.readListBegin();
+                struct.mUValue = new ArrayList<String>(_list139.size);
+                String _elem140;
+                for (int _i141 = 0; _i141 < _list139.size; ++_i141)
                 {
-                  _elem116 = iprot.readString();
-                  struct.mUValue.add(_elem116);
+                  _elem140 = iprot.readString();
+                  struct.mUValue.add(_elem140);
                 }
                 iprot.readListEnd();
               }
@@ -1974,6 +2076,25 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
             if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
               struct.mDeleteAttribute = iprot.readBool();
               struct.setMDeleteAttributeIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 18: // DATASET
+            if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
+              {
+                org.apache.thrift.protocol.TList _list142 = iprot.readListBegin();
+                struct.dataset = new ArrayList<alluxio.thrift.H5DatasetInfo>(_list142.size);
+                alluxio.thrift.H5DatasetInfo _elem143;
+                for (int _i144 = 0; _i144 < _list142.size; ++_i144)
+                {
+                  _elem143 = new alluxio.thrift.H5DatasetInfo();
+                  _elem143.read(iprot);
+                  struct.dataset.add(_elem143);
+                }
+                iprot.readListEnd();
+              }
+              struct.setDatasetIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -2044,9 +2165,9 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
           oprot.writeFieldBegin(M_INDEX_INFO__BLOCK_ID_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.I64, struct.mIndexInfo_BlockId.size()));
-            for (long _iter118 : struct.mIndexInfo_BlockId)
+            for (long _iter145 : struct.mIndexInfo_BlockId)
             {
-              oprot.writeI64(_iter118);
+              oprot.writeI64(_iter145);
             }
             oprot.writeListEnd();
           }
@@ -2058,9 +2179,9 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
           oprot.writeFieldBegin(M_INDEX_INFO__MAX_VALUE_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.DOUBLE, struct.mIndexInfo_MaxValue.size()));
-            for (double _iter119 : struct.mIndexInfo_MaxValue)
+            for (double _iter146 : struct.mIndexInfo_MaxValue)
             {
-              oprot.writeDouble(_iter119);
+              oprot.writeDouble(_iter146);
             }
             oprot.writeListEnd();
           }
@@ -2072,9 +2193,9 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
           oprot.writeFieldBegin(M_INDEX_INFO__MIN_VALUE_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.DOUBLE, struct.mIndexInfo_MinValue.size()));
-            for (double _iter120 : struct.mIndexInfo_MinValue)
+            for (double _iter147 : struct.mIndexInfo_MinValue)
             {
-              oprot.writeDouble(_iter120);
+              oprot.writeDouble(_iter147);
             }
             oprot.writeListEnd();
           }
@@ -2086,9 +2207,9 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
           oprot.writeFieldBegin(M_INDEX_INFO__VAR_NAME_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.mIndexInfo_VarName.size()));
-            for (String _iter121 : struct.mIndexInfo_VarName)
+            for (String _iter148 : struct.mIndexInfo_VarName)
             {
-              oprot.writeString(_iter121);
+              oprot.writeString(_iter148);
             }
             oprot.writeListEnd();
           }
@@ -2100,9 +2221,9 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
           oprot.writeFieldBegin(M_AUG_INDEX_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.I64, struct.mAugIndex.size()));
-            for (long _iter122 : struct.mAugIndex)
+            for (long _iter149 : struct.mAugIndex)
             {
-              oprot.writeI64(_iter122);
+              oprot.writeI64(_iter149);
             }
             oprot.writeListEnd();
           }
@@ -2114,9 +2235,9 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
           oprot.writeFieldBegin(M_PATH_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.mPath.size()));
-            for (String _iter123 : struct.mPath)
+            for (String _iter150 : struct.mPath)
             {
-              oprot.writeString(_iter123);
+              oprot.writeString(_iter150);
             }
             oprot.writeListEnd();
           }
@@ -2128,9 +2249,9 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
           oprot.writeFieldBegin(M_UKEY_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.mUKey.size()));
-            for (String _iter124 : struct.mUKey)
+            for (String _iter151 : struct.mUKey)
             {
-              oprot.writeString(_iter124);
+              oprot.writeString(_iter151);
             }
             oprot.writeListEnd();
           }
@@ -2142,9 +2263,9 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
           oprot.writeFieldBegin(M_UVALUE_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.mUValue.size()));
-            for (String _iter125 : struct.mUValue)
+            for (String _iter152 : struct.mUValue)
             {
-              oprot.writeString(_iter125);
+              oprot.writeString(_iter152);
             }
             oprot.writeListEnd();
           }
@@ -2155,6 +2276,20 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
         oprot.writeFieldBegin(M_DELETE_ATTRIBUTE_FIELD_DESC);
         oprot.writeBool(struct.mDeleteAttribute);
         oprot.writeFieldEnd();
+      }
+      if (struct.dataset != null) {
+        if (struct.isSetDataset()) {
+          oprot.writeFieldBegin(DATASET_FIELD_DESC);
+          {
+            oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.dataset.size()));
+            for (alluxio.thrift.H5DatasetInfo _iter153 : struct.dataset)
+            {
+              _iter153.write(oprot);
+            }
+            oprot.writeListEnd();
+          }
+          oprot.writeFieldEnd();
+        }
       }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
@@ -2225,7 +2360,10 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
       if (struct.isSetMDeleteAttribute()) {
         optionals.set(16);
       }
-      oprot.writeBitSet(optionals, 17);
+      if (struct.isSetDataset()) {
+        optionals.set(17);
+      }
+      oprot.writeBitSet(optionals, 18);
       if (struct.isSetPinned()) {
         oprot.writeBool(struct.pinned);
       }
@@ -2253,84 +2391,93 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
       if (struct.isSetMIndexInfo_BlockId()) {
         {
           oprot.writeI32(struct.mIndexInfo_BlockId.size());
-          for (long _iter126 : struct.mIndexInfo_BlockId)
+          for (long _iter154 : struct.mIndexInfo_BlockId)
           {
-            oprot.writeI64(_iter126);
+            oprot.writeI64(_iter154);
           }
         }
       }
       if (struct.isSetMIndexInfo_MaxValue()) {
         {
           oprot.writeI32(struct.mIndexInfo_MaxValue.size());
-          for (double _iter127 : struct.mIndexInfo_MaxValue)
+          for (double _iter155 : struct.mIndexInfo_MaxValue)
           {
-            oprot.writeDouble(_iter127);
+            oprot.writeDouble(_iter155);
           }
         }
       }
       if (struct.isSetMIndexInfo_MinValue()) {
         {
           oprot.writeI32(struct.mIndexInfo_MinValue.size());
-          for (double _iter128 : struct.mIndexInfo_MinValue)
+          for (double _iter156 : struct.mIndexInfo_MinValue)
           {
-            oprot.writeDouble(_iter128);
+            oprot.writeDouble(_iter156);
           }
         }
       }
       if (struct.isSetMIndexInfo_VarName()) {
         {
           oprot.writeI32(struct.mIndexInfo_VarName.size());
-          for (String _iter129 : struct.mIndexInfo_VarName)
+          for (String _iter157 : struct.mIndexInfo_VarName)
           {
-            oprot.writeString(_iter129);
+            oprot.writeString(_iter157);
           }
         }
       }
       if (struct.isSetMAugIndex()) {
         {
           oprot.writeI32(struct.mAugIndex.size());
-          for (long _iter130 : struct.mAugIndex)
+          for (long _iter158 : struct.mAugIndex)
           {
-            oprot.writeI64(_iter130);
+            oprot.writeI64(_iter158);
           }
         }
       }
       if (struct.isSetMPath()) {
         {
           oprot.writeI32(struct.mPath.size());
-          for (String _iter131 : struct.mPath)
+          for (String _iter159 : struct.mPath)
           {
-            oprot.writeString(_iter131);
+            oprot.writeString(_iter159);
           }
         }
       }
       if (struct.isSetMUKey()) {
         {
           oprot.writeI32(struct.mUKey.size());
-          for (String _iter132 : struct.mUKey)
+          for (String _iter160 : struct.mUKey)
           {
-            oprot.writeString(_iter132);
+            oprot.writeString(_iter160);
           }
         }
       }
       if (struct.isSetMUValue()) {
         {
           oprot.writeI32(struct.mUValue.size());
-          for (String _iter133 : struct.mUValue)
+          for (String _iter161 : struct.mUValue)
           {
-            oprot.writeString(_iter133);
+            oprot.writeString(_iter161);
           }
         }
       }
       if (struct.isSetMDeleteAttribute()) {
         oprot.writeBool(struct.mDeleteAttribute);
       }
+      if (struct.isSetDataset()) {
+        {
+          oprot.writeI32(struct.dataset.size());
+          for (alluxio.thrift.H5DatasetInfo _iter162 : struct.dataset)
+          {
+            _iter162.write(oprot);
+          }
+        }
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, SetAttributeTOptions struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
-      BitSet incoming = iprot.readBitSet(17);
+      BitSet incoming = iprot.readBitSet(18);
       if (incoming.get(0)) {
         struct.pinned = iprot.readBool();
         struct.setPinnedIsSet(true);
@@ -2365,104 +2512,104 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
       }
       if (incoming.get(8)) {
         {
-          org.apache.thrift.protocol.TList _list134 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.I64, iprot.readI32());
-          struct.mIndexInfo_BlockId = new ArrayList<Long>(_list134.size);
-          long _elem135;
-          for (int _i136 = 0; _i136 < _list134.size; ++_i136)
+          org.apache.thrift.protocol.TList _list163 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.I64, iprot.readI32());
+          struct.mIndexInfo_BlockId = new ArrayList<Long>(_list163.size);
+          long _elem164;
+          for (int _i165 = 0; _i165 < _list163.size; ++_i165)
           {
-            _elem135 = iprot.readI64();
-            struct.mIndexInfo_BlockId.add(_elem135);
+            _elem164 = iprot.readI64();
+            struct.mIndexInfo_BlockId.add(_elem164);
           }
         }
         struct.setMIndexInfo_BlockIdIsSet(true);
       }
       if (incoming.get(9)) {
         {
-          org.apache.thrift.protocol.TList _list137 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.DOUBLE, iprot.readI32());
-          struct.mIndexInfo_MaxValue = new ArrayList<Double>(_list137.size);
-          double _elem138;
-          for (int _i139 = 0; _i139 < _list137.size; ++_i139)
+          org.apache.thrift.protocol.TList _list166 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.DOUBLE, iprot.readI32());
+          struct.mIndexInfo_MaxValue = new ArrayList<Double>(_list166.size);
+          double _elem167;
+          for (int _i168 = 0; _i168 < _list166.size; ++_i168)
           {
-            _elem138 = iprot.readDouble();
-            struct.mIndexInfo_MaxValue.add(_elem138);
+            _elem167 = iprot.readDouble();
+            struct.mIndexInfo_MaxValue.add(_elem167);
           }
         }
         struct.setMIndexInfo_MaxValueIsSet(true);
       }
       if (incoming.get(10)) {
         {
-          org.apache.thrift.protocol.TList _list140 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.DOUBLE, iprot.readI32());
-          struct.mIndexInfo_MinValue = new ArrayList<Double>(_list140.size);
-          double _elem141;
-          for (int _i142 = 0; _i142 < _list140.size; ++_i142)
+          org.apache.thrift.protocol.TList _list169 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.DOUBLE, iprot.readI32());
+          struct.mIndexInfo_MinValue = new ArrayList<Double>(_list169.size);
+          double _elem170;
+          for (int _i171 = 0; _i171 < _list169.size; ++_i171)
           {
-            _elem141 = iprot.readDouble();
-            struct.mIndexInfo_MinValue.add(_elem141);
+            _elem170 = iprot.readDouble();
+            struct.mIndexInfo_MinValue.add(_elem170);
           }
         }
         struct.setMIndexInfo_MinValueIsSet(true);
       }
       if (incoming.get(11)) {
         {
-          org.apache.thrift.protocol.TList _list143 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.mIndexInfo_VarName = new ArrayList<String>(_list143.size);
-          String _elem144;
-          for (int _i145 = 0; _i145 < _list143.size; ++_i145)
+          org.apache.thrift.protocol.TList _list172 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.mIndexInfo_VarName = new ArrayList<String>(_list172.size);
+          String _elem173;
+          for (int _i174 = 0; _i174 < _list172.size; ++_i174)
           {
-            _elem144 = iprot.readString();
-            struct.mIndexInfo_VarName.add(_elem144);
+            _elem173 = iprot.readString();
+            struct.mIndexInfo_VarName.add(_elem173);
           }
         }
         struct.setMIndexInfo_VarNameIsSet(true);
       }
       if (incoming.get(12)) {
         {
-          org.apache.thrift.protocol.TList _list146 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.I64, iprot.readI32());
-          struct.mAugIndex = new ArrayList<Long>(_list146.size);
-          long _elem147;
-          for (int _i148 = 0; _i148 < _list146.size; ++_i148)
+          org.apache.thrift.protocol.TList _list175 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.I64, iprot.readI32());
+          struct.mAugIndex = new ArrayList<Long>(_list175.size);
+          long _elem176;
+          for (int _i177 = 0; _i177 < _list175.size; ++_i177)
           {
-            _elem147 = iprot.readI64();
-            struct.mAugIndex.add(_elem147);
+            _elem176 = iprot.readI64();
+            struct.mAugIndex.add(_elem176);
           }
         }
         struct.setMAugIndexIsSet(true);
       }
       if (incoming.get(13)) {
         {
-          org.apache.thrift.protocol.TList _list149 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.mPath = new ArrayList<String>(_list149.size);
-          String _elem150;
-          for (int _i151 = 0; _i151 < _list149.size; ++_i151)
+          org.apache.thrift.protocol.TList _list178 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.mPath = new ArrayList<String>(_list178.size);
+          String _elem179;
+          for (int _i180 = 0; _i180 < _list178.size; ++_i180)
           {
-            _elem150 = iprot.readString();
-            struct.mPath.add(_elem150);
+            _elem179 = iprot.readString();
+            struct.mPath.add(_elem179);
           }
         }
         struct.setMPathIsSet(true);
       }
       if (incoming.get(14)) {
         {
-          org.apache.thrift.protocol.TList _list152 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.mUKey = new ArrayList<String>(_list152.size);
-          String _elem153;
-          for (int _i154 = 0; _i154 < _list152.size; ++_i154)
+          org.apache.thrift.protocol.TList _list181 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.mUKey = new ArrayList<String>(_list181.size);
+          String _elem182;
+          for (int _i183 = 0; _i183 < _list181.size; ++_i183)
           {
-            _elem153 = iprot.readString();
-            struct.mUKey.add(_elem153);
+            _elem182 = iprot.readString();
+            struct.mUKey.add(_elem182);
           }
         }
         struct.setMUKeyIsSet(true);
       }
       if (incoming.get(15)) {
         {
-          org.apache.thrift.protocol.TList _list155 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.mUValue = new ArrayList<String>(_list155.size);
-          String _elem156;
-          for (int _i157 = 0; _i157 < _list155.size; ++_i157)
+          org.apache.thrift.protocol.TList _list184 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.mUValue = new ArrayList<String>(_list184.size);
+          String _elem185;
+          for (int _i186 = 0; _i186 < _list184.size; ++_i186)
           {
-            _elem156 = iprot.readString();
-            struct.mUValue.add(_elem156);
+            _elem185 = iprot.readString();
+            struct.mUValue.add(_elem185);
           }
         }
         struct.setMUValueIsSet(true);
@@ -2470,6 +2617,20 @@ public class SetAttributeTOptions implements org.apache.thrift.TBase<SetAttribut
       if (incoming.get(16)) {
         struct.mDeleteAttribute = iprot.readBool();
         struct.setMDeleteAttributeIsSet(true);
+      }
+      if (incoming.get(17)) {
+        {
+          org.apache.thrift.protocol.TList _list187 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.dataset = new ArrayList<alluxio.thrift.H5DatasetInfo>(_list187.size);
+          alluxio.thrift.H5DatasetInfo _elem188;
+          for (int _i189 = 0; _i189 < _list187.size; ++_i189)
+          {
+            _elem188 = new alluxio.thrift.H5DatasetInfo();
+            _elem188.read(iprot);
+            struct.dataset.add(_elem188);
+          }
+        }
+        struct.setDatasetIsSet(true);
       }
     }
   }

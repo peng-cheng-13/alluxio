@@ -13,6 +13,16 @@ struct BlockInfo {
 }
 
 /**
+ * Information about H5 Dataset.
+ */
+struct H5DatasetInfo {
+  1: string name
+  2: i64 size
+  3: string datatype
+  4: map<string, string> attributes
+}
+
+/**
  * Information about blocks.
  */
 struct BlockLocation {
