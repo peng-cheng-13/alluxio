@@ -398,4 +398,18 @@ public interface FileSystem {
   Set<String> mpiSetect(List<String> keylist, List<String> valuelist, List<String> typelist,
       int mpisize, int mpirank) throws Exception;
 
+  /**
+   * Add Dataset info.
+   * @param name the name of the dataset
+   * @param keys the attribute keys
+   * @param values the attribute values
+   */
+  void addDatasetInfo(String name, List<String> keys, List<String> values);
+
+  /**
+   * Set Dataset info to target path.
+   * @param path the target path
+   */
+  void setDatasetInfo(AlluxioURI path) throws Exception;
+
 }

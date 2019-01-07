@@ -3503,7 +3503,10 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
       }
     }
     if (options.mHasH5Dataset) {
-      LOG.info("Update in memory data structure of H5 Dateset info {}", options.getH5Dateset());
+      for (int i = 0; i < options.getH5Dateset().size(); i++) {
+        LOG.info("Update in memory data structure of H5 Dateset info {}",
+            options.getH5Dateset().get(i).getUDM());
+      }
     }
     if (options.getPersisted() != null) {
       Preconditions.checkArgument(inode.isFile(), PreconditionMessage.PERSIST_ONLY_FOR_FILE);

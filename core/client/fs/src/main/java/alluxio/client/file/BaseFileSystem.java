@@ -45,6 +45,7 @@ import alluxio.exception.status.UnavailableException;
 import alluxio.wire.LoadMetadataType;
 import alluxio.wire.MountPointInfo;
 import alluxio.wire.QueryInfo;
+import alluxio.wire.HDFDataSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +58,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -75,6 +79,7 @@ public class BaseFileSystem implements FileSystem {
   //private static PathStore sPathStore;
   private static SerializableObjectStore<String, Set<String>> sPathStore;
   private static HashStore sValueStore;
+  private static List<HDFDataSet> sDatasetInfo;
 
   /**
    * @param context file system context
@@ -86,6 +91,7 @@ public class BaseFileSystem implements FileSystem {
       sValueStore = new HashStore(new File(storepath.concat("/ValueStore")), 10240);
       //sPathStore = new HashStore(new File(storepath.concat("/PathStore")), 10240);
       sPathStore = PathStore.getDataStore();
+      sDatasetInfo = new ArrayList<>();
     } catch (Exception e) {
       System.out.println("Init HashStore failed");
     }
@@ -615,6 +621,29 @@ public class BaseFileSystem implements FileSystem {
       }
     }
     return ret;
+  }
+
+  @Override
+  public void addDatasetInfo(String name, List<String> keys, List<String> values) {
+    HDFDataSet tmpinfo = new HDFDataSet(name);
+    Map<String, String> attributes = new HashMap<>();
+    for (int i = 0; i < keys.size(); i++) {
+      attributes.put(keys.get(i), values.get(i));
+    }
+    tmpinfo.setUDM(attributes);
+    sDatasetInfo.add(tmpinfo);
+  }
+
+  @Override
+  public void setDatasetInfo(AlluxioURI path) throws Exception {
+    try {
+      SetAttributeOptions soptions = SetAttributeOptions.defaults();
+      soptions.addH5(sDatasetInfo);
+      setAttribute(path, soptions);
+      sDatasetInfo.clear();
+    } catch (Exception e) {
+      throw e;
+    }
   }
 
 }
