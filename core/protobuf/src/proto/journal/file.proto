@@ -130,7 +130,7 @@ message RenameEntry {
   optional int64 op_time_ms = 3;
 }
 
-// next available id: 11
+// next available id: 12
 message SetAttributeEntry {
   optional int64 id = 1;
   optional int64 op_time_ms = 2;
@@ -142,4 +142,5 @@ message SetAttributeEntry {
   optional int32 permission = 8;
   optional PTtlAction ttlAction = 9 [default = DELETE];
   optional bytes udm = 10;
+  optional bytes dataset = 11;
 }

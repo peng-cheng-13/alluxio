@@ -51,7 +51,7 @@ public final class SetAttributeOptions {
   private List<String> mUValue = new ArrayList<String>();
   public boolean mDeleteAttribute;
   public boolean mHasH5Dataset = false;
-  public List<HDFDataSet> mH5Dateset = new ArrayList<>();
+  public ArrayList<HDFDataSet> mH5Dateset = new ArrayList<>();
 
   /**
    * @return the default {@link SetAttributeOptions}
@@ -125,6 +125,22 @@ public final class SetAttributeOptions {
     mUKey = new ArrayList<String>();
     mUValue = new ArrayList<String>();
     mDeleteAttribute = false;
+  }
+
+  /**
+   * @return the H5 Dataset
+   */
+  public ArrayList<HDFDataSet> getH5Dateset() {
+    return mH5Dateset;
+  }
+
+  /**
+   * Set H5 Dataset info.
+   * @param value the input dataset info
+   */
+  public void setH5Dateset(ArrayList<HDFDataSet> value) {
+    mHasH5Dataset = true;
+    mH5Dateset = value;
   }
 
   /**

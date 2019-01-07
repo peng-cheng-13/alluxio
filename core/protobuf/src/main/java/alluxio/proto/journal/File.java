@@ -11495,12 +11495,22 @@ public final class File {
      * <code>optional bytes udm = 10;</code>
      */
     com.google.protobuf.ByteString getUdm();
+
+    // optional bytes dataset = 11;
+    /**
+     * <code>optional bytes dataset = 11;</code>
+     */
+    boolean hasDataset();
+    /**
+     * <code>optional bytes dataset = 11;</code>
+     */
+    com.google.protobuf.ByteString getDataset();
   }
   /**
    * Protobuf type {@code alluxio.proto.journal.SetAttributeEntry}
    *
    * <pre>
-   * next available id: 11
+   * next available id: 12
    * </pre>
    */
   public static final class SetAttributeEntry extends
@@ -11605,6 +11615,11 @@ public final class File {
             case 82: {
               bitField0_ |= 0x00000200;
               udm_ = input.readBytes();
+              break;
+            }
+            case 90: {
+              bitField0_ |= 0x00000400;
+              dataset_ = input.readBytes();
               break;
             }
           }
@@ -11861,6 +11876,22 @@ public final class File {
       return udm_;
     }
 
+    // optional bytes dataset = 11;
+    public static final int DATASET_FIELD_NUMBER = 11;
+    private com.google.protobuf.ByteString dataset_;
+    /**
+     * <code>optional bytes dataset = 11;</code>
+     */
+    public boolean hasDataset() {
+      return ((bitField0_ & 0x00000400) == 0x00000400);
+    }
+    /**
+     * <code>optional bytes dataset = 11;</code>
+     */
+    public com.google.protobuf.ByteString getDataset() {
+      return dataset_;
+    }
+
     private void initFields() {
       id_ = 0L;
       opTimeMs_ = 0L;
@@ -11872,6 +11903,7 @@ public final class File {
       permission_ = 0;
       ttlAction_ = alluxio.proto.journal.File.PTtlAction.DELETE;
       udm_ = com.google.protobuf.ByteString.EMPTY;
+      dataset_ = com.google.protobuf.ByteString.EMPTY;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -11914,6 +11946,9 @@ public final class File {
       }
       if (((bitField0_ & 0x00000200) == 0x00000200)) {
         output.writeBytes(10, udm_);
+      }
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        output.writeBytes(11, dataset_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -11963,6 +11998,10 @@ public final class File {
       if (((bitField0_ & 0x00000200) == 0x00000200)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(10, udm_);
+      }
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(11, dataset_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -12046,7 +12085,7 @@ public final class File {
      * Protobuf type {@code alluxio.proto.journal.SetAttributeEntry}
      *
      * <pre>
-     * next available id: 11
+     * next available id: 12
      * </pre>
      */
     public static final class Builder extends
@@ -12104,6 +12143,8 @@ public final class File {
         bitField0_ = (bitField0_ & ~0x00000100);
         udm_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000200);
+        dataset_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000400);
         return this;
       }
 
@@ -12172,6 +12213,10 @@ public final class File {
           to_bitField0_ |= 0x00000200;
         }
         result.udm_ = udm_;
+        if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
+          to_bitField0_ |= 0x00000400;
+        }
+        result.dataset_ = dataset_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -12221,6 +12266,9 @@ public final class File {
         }
         if (other.hasUdm()) {
           setUdm(other.getUdm());
+        }
+        if (other.hasDataset()) {
+          setDataset(other.getDataset());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -12667,6 +12715,42 @@ public final class File {
         return this;
       }
 
+      // optional bytes dataset = 11;
+      private com.google.protobuf.ByteString dataset_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes dataset = 11;</code>
+       */
+      public boolean hasDataset() {
+        return ((bitField0_ & 0x00000400) == 0x00000400);
+      }
+      /**
+       * <code>optional bytes dataset = 11;</code>
+       */
+      public com.google.protobuf.ByteString getDataset() {
+        return dataset_;
+      }
+      /**
+       * <code>optional bytes dataset = 11;</code>
+       */
+      public Builder setDataset(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000400;
+        dataset_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes dataset = 11;</code>
+       */
+      public Builder clearDataset() {
+        bitField0_ = (bitField0_ & ~0x00000400);
+        dataset_ = getDefaultInstance().getDataset();
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:alluxio.proto.journal.SetAttributeEntry)
     }
 
@@ -12805,13 +12889,14 @@ public final class File {
       "(\003\022<\n\tttlAction\030\004 \001(\0162!.alluxio.proto.jo" +
       "urnal.PTtlAction:\006DELETE\"?\n\013RenameEntry\022" +
       "\n\n\002id\030\001 \001(\003\022\020\n\010dst_path\030\002 \001(\t\022\022\n\nop_time" +
-      "_ms\030\003 \001(\003\"\340\001\n\021SetAttributeEntry\022\n\n\002id\030\001 " +
+      "_ms\030\003 \001(\003\"\361\001\n\021SetAttributeEntry\022\n\n\002id\030\001 " +
       "\001(\003\022\022\n\nop_time_ms\030\002 \001(\003\022\016\n\006pinned\030\003 \001(\010\022" +
       "\013\n\003ttl\030\004 \001(\003\022\021\n\tpersisted\030\005 \001(\010\022\r\n\005owner" +
       "\030\006 \001(\t\022\r\n\005group\030\007 \001(\t\022\022\n\npermission\030\010 \001(" +
       "\005\022<\n\tttlAction\030\t \001(\0162!.alluxio.proto.jou" +
-      "rnal.PTtlAction:\006DELETE\022\013\n\003udm\030\n \001(\014*\"\n\n" +
-      "PTtlAction\022\n\n\006DELETE\020\000\022\010\n\004FREE\020\001"
+      "rnal.PTtlAction:\006DELETE\022\013\n\003udm\030\n \001(\014\022\017\n\007" +
+      "dataset\030\013 \001(\014*\"\n\nPTtlAction\022\n\n\006DELETE\020\000\022",
+      "\010\n\004FREE\020\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -12907,7 +12992,7 @@ public final class File {
           internal_static_alluxio_proto_journal_SetAttributeEntry_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_alluxio_proto_journal_SetAttributeEntry_descriptor,
-              new java.lang.String[] { "Id", "OpTimeMs", "Pinned", "Ttl", "Persisted", "Owner", "Group", "Permission", "TtlAction", "Udm", });
+              new java.lang.String[] { "Id", "OpTimeMs", "Pinned", "Ttl", "Persisted", "Owner", "Group", "Permission", "TtlAction", "Udm", "Dataset", });
           return null;
         }
       };

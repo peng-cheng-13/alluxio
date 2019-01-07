@@ -125,6 +125,7 @@ import alluxio.wire.MountPointInfo;
 import alluxio.wire.TtlAction;
 import alluxio.wire.WorkerInfo;
 import alluxio.wire.IndexInfo;
+import alluxio.wire.HDFDataSet;
 
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Gauge;
@@ -3333,6 +3334,13 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
       LOG.info("DB Test: call setAttribute Entry setUDM {}", currnetUDM);
       //tmpentry.setUDM(currnetUDM);
     }
+    if (options.mHasH5Dataset) {
+      JavaSerializer tmpSerializer = new JavaSerializer<ArrayList>();
+      alluxio.core.protobuf.com.google.protobuf.ByteString tmpbytes =
+          alluxio.core.protobuf.com.google.protobuf.ByteString.copyFrom(
+              tmpSerializer.serialize(options.getH5Dateset()));
+      builder.setDataset(tmpbytes);
+    }
     JournalEntry tmpentry = JournalEntry.newBuilder().setSetAttribute(builder).build();
     appendJournalEntry(tmpentry, journalContext);
   }
@@ -3494,6 +3502,9 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
         }
       }
     }
+    if (options.mHasH5Dataset) {
+      LOG.info("Update in memory data structure of H5 Dateset info {}", options.getH5Dateset());
+    }
     if (options.getPersisted() != null) {
       Preconditions.checkArgument(inode.isFile(), PreconditionMessage.PERSIST_ONLY_FOR_FILE);
       Preconditions.checkArgument(((InodeFile) inode).isCompleted(),
@@ -3592,6 +3603,12 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
           (HashMap) mSerializer.deserialize(tmpbytes.toByteArray());
       options.setUDM(currentUDM);
       LOG.info("DB Test: Entry has UDM: {}", currentUDM);
+    }
+    if (entry.hasDataset()) {
+      JavaSerializer tmpSerializer = new JavaSerializer<ArrayList>();
+      alluxio.core.protobuf.com.google.protobuf.ByteString tmpbytes = entry.getDataset();
+      ArrayList<HDFDataSet> dataset = (ArrayList) tmpSerializer.deserialize(tmpbytes.toByteArray());
+      options.setH5Dateset(dataset);
     }
     try (LockedInodePath inodePath = mInodeTree
         .lockFullInodePath(entry.getId(), InodeTree.LockMode.WRITE)) {
