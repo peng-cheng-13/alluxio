@@ -30,6 +30,10 @@ import alluxio.client.file.options.OutStreamOptions;
 import alluxio.client.file.options.RenameOptions;
 import alluxio.client.file.options.SetAttributeOptions;
 import alluxio.client.file.options.UnmountOptions;
+import alluxio.client.file.policy.FileWriteLocationPolicy;
+import alluxio.client.file.policy.LocalFirstPolicy;
+import alluxio.client.file.policy.RoundRobinPolicy;
+import alluxio.client.file.policy.SpecificHostPolicy;
 import alluxio.exception.AlluxioException;
 import alluxio.exception.DirectoryNotEmptyException;
 import alluxio.exception.ExceptionMessage;
@@ -80,6 +84,9 @@ public class BaseFileSystem implements FileSystem {
   private static SerializableObjectStore<String, Set<String>> sPathStore;
   private static HashStore sValueStore;
   private static List<HDFDataSet> sDatasetInfo;
+  private static PatternStore sPatternStore;
+  private static CreateFileOptions sCreateFileOption;
+  private static int sNum = 0;
 
   /**
    * @param context file system context
@@ -89,9 +96,11 @@ public class BaseFileSystem implements FileSystem {
     try {
       String storepath = Configuration.get(PropertyKey.MASTER_JOURNAL_FOLDER);
       sValueStore = new HashStore(new File(storepath.concat("/ValueStore")), 10240);
+      sPatternStore = new PatternStore(new File(storepath.concat("/PatternStore")), 1024);
       //sPathStore = new HashStore(new File(storepath.concat("/PathStore")), 10240);
       sPathStore = PathStore.getDataStore();
       sDatasetInfo = new ArrayList<>();
+      sCreateFileOption = CreateFileOptions.defaults();
     } catch (Exception e) {
       System.out.println("Init HashStore failed");
     }
@@ -136,7 +145,7 @@ public class BaseFileSystem implements FileSystem {
   @Override
   public FileOutStream createFile(AlluxioURI path)
       throws FileAlreadyExistsException, InvalidPathException, IOException, AlluxioException {
-    return createFile(path, CreateFileOptions.defaults());
+    return createFile(path, sCreateFileOption);
   }
 
   @Override
@@ -645,5 +654,188 @@ public class BaseFileSystem implements FileSystem {
       throw e;
     }
   }
+
+  @Override
+  public void setDataAccessPattern(String pattern, int tier, String target, long blockSize)
+      throws Exception {
+    String patternName = pattern.toLowerCase();
+    FileWriteLocationPolicy localgetLocationPolicy = new RoundRobinPolicy();;
+    try {
+      switch (patternName) {
+        case  "pipeline" : {
+          localgetLocationPolicy = new LocalFirstPolicy();
+          sCreateFileOption.setLocationPolicy(localgetLocationPolicy);
+          sCreateFileOption.setBlockSizeBytes(512 * 1024 * 1024);
+          sCreateFileOption.setWriteTier(0);
+          LOG.info("Set pipeline pattern");
+          break;
+        }
+        case "scatter" : {
+          localgetLocationPolicy = new RoundRobinPolicy();
+          sCreateFileOption.setLocationPolicy(localgetLocationPolicy);
+          sCreateFileOption.setBlockSizeBytes(blockSize);
+          //int storageTier = getLoadBalanceStrategy("MaxFree");
+          sCreateFileOption.setWriteTier(tier);
+          LOG.info("Set multicast pattern");
+          break;
+        }
+        case "gather" :
+        case "reduce" : {
+          localgetLocationPolicy = new SpecificHostPolicy(target);
+          sCreateFileOption.setLocationPolicy(localgetLocationPolicy);
+          sCreateFileOption.setBlockSizeBytes(512 * 1024 * 1024);
+          //int storageTier = getLoadBalanceStrategy("MaxFree");
+          sCreateFileOption.setWriteTier(tier);
+          LOG.info("Set gather pattern");
+          break;
+        }
+        case "multicast" : {
+          localgetLocationPolicy = new RoundRobinPolicy();
+          sCreateFileOption.setLocationPolicy(localgetLocationPolicy);
+
+          if (blockSize < 1024 * 1024) {
+            sCreateFileOption.setWriteTier(0);
+          } else {
+            //int storageTier = getLoadBalanceStrategy("MaxFree");
+            sCreateFileOption.setWriteTier(tier);
+          }
+          LOG.info("Set multicast pattern");
+          break;
+        }
+        default : {
+          UserDefinedPatterns tmpPattern = sPatternStore.get(patternName);
+          if (tmpPattern != null) {
+            sCreateFileOption.setBlockSizeBytes(
+                tmpPattern.getBlockSizeBytes());
+            switch (tmpPattern.getLocationPolicyClass()) {
+              case "RoundRobinPolicy" : {
+                localgetLocationPolicy = new RoundRobinPolicy();
+                break;
+              }
+              case "LocalFirstPolicy" : {
+                localgetLocationPolicy = new LocalFirstPolicy();
+                break;
+              }
+              case "SpecificHostPolicy" : {
+                localgetLocationPolicy = new SpecificHostPolicy(tmpPattern.getHost());
+                break;
+              }
+              default : {
+                LOG.debug("Unknown layout policy");
+              }
+            }
+            sCreateFileOption.setLocationPolicy(localgetLocationPolicy);
+            sCreateFileOption.setWriteTier(tier);
+            /*storage tier defined by user has higher prioity than LoadBalanceStrategy*/
+            sCreateFileOption.setWriteTier(tmpPattern.getWriteTier());
+            LOG.info("Set " + tmpPattern + "pattern");
+          } else {
+            LOG.info("Unknown Data Access Pattern error");
+          }
+        }
+      }
+    } catch (Exception e) {
+      throw e;
+    }
+  }
+
+  @Override
+  public void defineDataAccessPattern(String pattern) throws Exception {
+    UserDefinedPatterns tmpPattern = UserDefinedPatterns.defaults();
+    sPatternStore.put(pattern.toLowerCase(), tmpPattern);
+    LOG.info("Add data access pattern" + pattern);
+  }
+
+  @Override
+  public void setStorageTier(String pattern, int tier) throws Exception {
+    UserDefinedPatterns tmpPattern = sPatternStore.get(pattern.toLowerCase());
+    if (tmpPattern != null) {
+      tmpPattern.setWriteTier(tier);
+      sPatternStore.put(pattern.toLowerCase(), tmpPattern);
+      LOG.info("Set storage tier to " + tier + "for pattern " + pattern);
+    }
+  }
+
+  @Override
+  public void setBlockSize(String pattern, long blockSizeBytes) throws Exception {
+    UserDefinedPatterns tmpPattern = sPatternStore.get(pattern.toLowerCase());
+    if (tmpPattern != null) {
+      tmpPattern.setBlockSizeBytes(blockSizeBytes);
+      sPatternStore.put(pattern.toLowerCase(), tmpPattern);
+      LOG.info("Set block size to " + blockSizeBytes + "for pattern " + pattern);
+    }
+  }
+
+  @Override
+  public void setLayoutStrategy(String pattern, String layoutStrategy) throws Exception {
+    UserDefinedPatterns tmpPattern = sPatternStore.get(pattern.toLowerCase());
+    if (tmpPattern != null) {
+      tmpPattern.setLocationPolicy(layoutStrategy);
+      sPatternStore.put(pattern.toLowerCase(), tmpPattern);
+      LOG.info("Set layout strategy to " + layoutStrategy + "for pattern " + pattern);
+    }
+  }
+
+  @Override
+  public void setLoadBalanceStrategy(String pattern, String loadBalance) throws Exception {
+    UserDefinedPatterns tmpPattern = sPatternStore.get(pattern.toLowerCase());
+    if (tmpPattern != null) {
+      tmpPattern.setLoadBalanceStrategy(loadBalance);
+      sPatternStore.put(pattern.toLowerCase(), tmpPattern);
+      LOG.info("Set balance strategy to " + loadBalance + "for pattern " + pattern);
+    }
+  }
+
+  @Override
+  public void setHost(String pattern, String host) throws Exception {
+    UserDefinedPatterns tmpPattern = sPatternStore.get(pattern.toLowerCase());
+    if (tmpPattern != null) {
+      tmpPattern.setHost(host);
+      sPatternStore.put(pattern.toLowerCase(), tmpPattern);
+      LOG.info("Set host to " + host + "for pattern " + pattern);
+    }
+  }
+
+  /*
+  @Overrid
+  public int getLoadBalanceStrategy(String myloadbalance) {
+    int mytier = 0;
+    switch (myloadbalance) {
+      case "MaxFree" : {
+        BlockMetadataManager metaManager = BlockMetadataManager.createBlockMetadataManager();
+        StorageTier tier0 = metaManager.getTier("MEM");
+        StorageTier tier1 = metaManager.getTier("HDD");
+        long freeTier0 = tier0.getAvailableBytes();
+        long avaTier0 = tier0.getCapacityBytes();
+        long freeTier1 = tier1.getAvailableBytes();
+        long avaTier1 = tier1.getCapacityBytes();
+        double f0 = ((double) freeTier0) / ((double) avaTier0);
+        double f1 = ((double) freeTier1) / ((double) avaTier1);
+        if (f0 < f1) {
+          mytier = 1;
+        } else {
+          mytier = 0;
+        }
+        break;
+      }
+      case "RoundRobin" : {
+        sNum++;
+        if (sNum == 1000) {
+          sNum = 0;
+        }
+        mytier = (sNum - 1) % 2;
+        break;
+      }
+      case "Random" : {
+        mytier = (int) (Math.random() * 2);
+        break;
+      }
+      default : {
+        LOG.debug("Unknown LoadBalanceStrategy error");
+      }
+    }
+    return mytier;
+  }
+  */
 
 }
