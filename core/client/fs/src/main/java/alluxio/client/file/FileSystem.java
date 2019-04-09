@@ -412,4 +412,62 @@ public interface FileSystem {
    */
   void setDatasetInfo(AlluxioURI path) throws Exception;
 
+  /**
+   * Set data access pattern.
+   * @param pattern the current pattern
+   * @param tier the target storage tier
+   * @param target the choosed worker to hold the data
+   * @param blockSize the size of block
+   */
+  void setDataAccessPattern(String pattern, int tier, String target, long blockSize)
+      throws Exception;
+
+  /**
+   * Define a new data access pattern.
+   * @param pattern the name of user defined data access pattern
+   */
+  void defineDataAccessPattern(String pattern) throws Exception;
+
+  /**
+   * Set the tier to use.
+   * @param pattern the name of user defined data access pattern
+   * @param tier the write tier to use for this operation
+   */
+  void setStorageTier(String pattern, int tier) throws Exception;
+
+  /**
+   * Set the block size to use.
+   * @param pattern the name of user defined data access pattern
+   * @param blockSizeBytes the block size to use
+   */
+  void setBlockSize(String pattern, long blockSizeBytes) throws Exception;
+
+  /**
+   * Set the horizontal block layout strategy.
+   * @param pattern the name of user defined data access pattern
+   * @param layoutStrategy the strategy to use when storing data to TDMS
+   */
+  void setLayoutStrategy(String pattern, String layoutStrategy) throws Exception;
+
+  /**
+   * Set the vertical block layout strategy.
+   * @param pattern the name of user defined data access pattern
+   * @param loadBalance the strategy to use when storing data to TDMS
+   */
+  void setLoadBalanceStrategy(String pattern, String loadBalance) throws Exception;
+
+  /**
+   * Set the host to use.
+   * @param pattern the name of user defined data access pattern
+   * @param host the specified host
+   */
+  void setHost(String pattern, String host) throws Exception;
+
+  /**
+   * Get the target storage tier.
+   * @param myloadbalance the specified load balance strategy
+   * @return the target storatge tier
+   *
+  int getLoadBalanceStrategy(String myloadbalance);*/
+
 }

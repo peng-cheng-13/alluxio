@@ -280,8 +280,10 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
 
   /** Handle the block index info. */
   private KratiDataStore mBlockIndexStore = null;
-  private HashStore mValueStore = null;
-  private HashStore mPathStore = null;
+  //private HashStore mValueStore = null;
+  private HashMap<String, Set> mValueStore = null;
+  //private HashStore mPathStore = null;
+  private HashMap<String, Set> mPathStore = null;
 
   /** Handle to the block master. */
   private final BlockMaster mBlockMaster;
@@ -366,8 +368,10 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
       String storepath = Configuration.get(PropertyKey.MASTER_JOURNAL_FOLDER);
       targetfile = new File(storepath.concat("/BlockIndexStore"));
       mBlockIndexStore = new KratiDataStore(targetfile, 10240);
-      mValueStore = new HashStore(new File(storepath.concat("/ValueStore")), 10240);
-      mPathStore = new HashStore(new File(storepath.concat("/PathStore")), 10240);
+      //mValueStore = new HashStore(new File(storepath.concat("/ValueStore")), 10240);
+      mValueStore = new HashMap<>();
+      //mPathStore = new HashStore(new File(storepath.concat("/PathStore")), 10240);
+      mPathStore = new HashMap<>();
       mSerializer = new JavaSerializer<HashMap>();
     } catch (Exception e) {
       LOG.warn("Get KratiDataStore failed.", e);
@@ -3155,9 +3159,31 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
     List<String> valuelist = options.getUDMValue();
     try {
       if (options.mDeleteAttribute) {
-        mValueStore.deleteUDMKey(keylist, valuelist);
+        //mValueStore.deleteUDMKey(keylist, valuelist);
+        int i;
+        for (i = 0; i < keylist.size(); i++) {
+          String tmpkey = keylist.get(i);
+          if (mValueStore.get(tmpkey) != null) {
+            Set<String> currentvalue = mValueStore.get(tmpkey);
+            currentvalue.remove(valuelist.get(i));
+            mValueStore.put(tmpkey, currentvalue);
+          }
+        }
       } else {
-        mValueStore.putUDMKey(keylist, valuelist);
+        //mValueStore.putUDMKey(keylist, valuelist);
+        int i;
+        for (i = 0; i < keylist.size(); i++) {
+          String tmpkey = keylist.get(i);
+          if (mValueStore.get(tmpkey) != null) {
+            Set<String> currentvalue = mValueStore.get(tmpkey);
+            currentvalue.add(valuelist.get(i));
+            mValueStore.put(tmpkey, currentvalue);
+          } else {
+            Set<String> tmpvalue = new HashSet();
+            tmpvalue.add(valuelist.get(i));
+            mValueStore.put(tmpkey, tmpvalue);
+          }
+        }
       }
       //mValueStore.sync();
     } catch (Exception e) {
@@ -3196,9 +3222,27 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
       for (i = 0; i < keylist.size(); i++) {
         String tvalue = keylist.get(i).concat(valuelist.get(i));
         if (options.mDeleteAttribute) {
-          mPathStore.deleteUDMPath(tvalue, pathset);
+          //mPathStore.deleteUDMPath(tvalue, pathset);
+          if (mPathStore.get(tvalue) != null) {
+            Set<String> currentpath = mPathStore.get(tvalue);
+            Iterator<String> iterator = pathset.iterator();
+            while (iterator.hasNext()) {
+              currentpath.remove(iterator.next());
+            }
+            mPathStore.put(tvalue, currentpath);
+          }
         } else {
-          mPathStore.putUDMPath(tvalue, pathset);
+          //mPathStore.putUDMPath(tvalue, pathset);
+          if (mPathStore.get(tvalue) != null) {
+            Set<String> currentpath = mPathStore.get(tvalue);
+            Iterator<String> iterator = pathset.iterator();
+            while (iterator.hasNext()) {
+              currentpath.add(iterator.next());
+            }
+            mPathStore.put(tvalue, currentpath);
+          } else {
+            mPathStore.put(tvalue, pathset);
+          }
         }
       }
       //mPathStore.sync();
@@ -3418,6 +3462,10 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
   private List<Inode<?>> setAttributeInternal(LockedInodePath inodePath, boolean replayed,
       long opTimeMs, SetAttributeOptions options)
       throws FileDoesNotExistException, InvalidPathException, AccessControlException {
+    /*Update in-memory metadata cache layer*/
+    writeUDMValue(options);
+    writeUDMPath(inodePath.getUri(), options);
+
     List<Inode<?>> persistedInodes = Collections.emptyList();
     Inode<?> inode = inodePath.getInode();
     if (options.getPinned() != null) {
