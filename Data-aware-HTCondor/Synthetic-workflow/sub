@@ -1,0 +1,44 @@
+executable = /BIGDATA/nsccgz_pcheng_1/Test/readinput.sh
+#arguments = /home/condor/alluxio-data/testfile
+universe = vanilla
+#input = /home/condor/alluxio-data/testfile
+#output = out
+notification = always
+requirements = TARGET.UidDomain == "condor" && TARGET.FileSystemDomain == "Lustre"
+rank = (UtsnameNodename == JobMachineAttrs)*10 
+log = log
+
+queue input,arguments from(
+/home/condor/alluxio-data/8Gfile/1-merged.bam, /home/condor/alluxio-data/8Gfile/1-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/2-merged.bam, /home/condor/alluxio-data/8Gfile/2-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/3-merged.bam, /home/condor/alluxio-data/8Gfile/3-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/4-merged.bam, /home/condor/alluxio-data/8Gfile/4-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/5-merged.bam, /home/condor/alluxio-data/8Gfile/5-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/6-merged.bam, /home/condor/alluxio-data/8Gfile/6-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/7-merged.bam, /home/condor/alluxio-data/8Gfile/7-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/8-merged.bam, /home/condor/alluxio-data/8Gfile/8-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/9-merged.bam, /home/condor/alluxio-data/8Gfile/9-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/10-merged.bam, /home/condor/alluxio-data/8Gfile/10-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/11-merged.bam, /home/condor/alluxio-data/8Gfile/11-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/12-merged.bam, /home/condor/alluxio-data/8Gfile/12-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/13-merged.bam, /home/condor/alluxio-data/8Gfile/13-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/14-merged.bam, /home/condor/alluxio-data/8Gfile/14-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/15-merged.bam, /home/condor/alluxio-data/8Gfile/15-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/16-merged.bam, /home/condor/alluxio-data/8Gfile/16-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/17-merged.bam, /home/condor/alluxio-data/8Gfile/17-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/18-merged.bam, /home/condor/alluxio-data/8Gfile/18-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/19-merged.bam, /home/condor/alluxio-data/8Gfile/19-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/20-merged.bam, /home/condor/alluxio-data/8Gfile/20-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/21-merged.bam, /home/condor/alluxio-data/8Gfile/21-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/22-merged.bam, /home/condor/alluxio-data/8Gfile/22-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/23-merged.bam, /home/condor/alluxio-data/8Gfile/23-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/24-merged.bam, /home/condor/alluxio-data/8Gfile/24-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/25-merged.bam, /home/condor/alluxio-data/8Gfile/25-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/26-merged.bam, /home/condor/alluxio-data/8Gfile/26-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/27-merged.bam, /home/condor/alluxio-data/8Gfile/27-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/28-merged.bam, /home/condor/alluxio-data/8Gfile/28-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/29-merged.bam, /home/condor/alluxio-data/8Gfile/29-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/30-merged.bam, /home/condor/alluxio-data/8Gfile/30-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/31-merged.bam, /home/condor/alluxio-data/8Gfile/31-merged.bam 1024
+/home/condor/alluxio-data/8Gfile/32-merged.bam, /home/condor/alluxio-data/8Gfile/32-merged.bam 1024
+)
