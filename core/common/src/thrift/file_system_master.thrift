@@ -33,6 +33,9 @@ struct CreateFileTOptions {
 }
 struct CreateFileTResponse {}
 
+struct DefineDaxTOptions{}
+struct DefineDaxTResponse {}
+
 struct DeleteTOptions {
   1: optional bool recursive
   2: optional bool alluxioOnly
@@ -123,6 +126,9 @@ struct FileInfo {
   24: common.TTtlAction ttlAction
   25: i64 mountId
   26: i32 inAlluxioPercentage
+  27: optional list<string> mUKey
+  28: optional list<string> mUValue
+  29: optional bool mUDM
 }
 
 struct MountTOptions {
@@ -239,6 +245,14 @@ service FileSystemMasterClientService extends common.AlluxioService {
   CreateFileTResponse createFile(
     /** the path of the file */ 1: string path,
     /** the options for creating the file */ 2: CreateFileTOptions options,
+    )
+    throws (1: exception.AlluxioTException e)
+
+  /**
+   * Define workflow information.
+   */
+  DefineDaxTResponse defineDax(
+    /** the path of dax file*/ 1: string path,
     )
     throws (1: exception.AlluxioTException e)
 

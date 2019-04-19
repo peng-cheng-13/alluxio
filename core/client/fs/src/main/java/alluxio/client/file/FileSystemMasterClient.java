@@ -94,6 +94,13 @@ public interface FileSystemMasterClient extends Client {
   void completeFile(AlluxioURI path, CompleteFileOptions options) throws IOException;
 
   /**
+   * Define workflow info.
+   *
+   * @param path the workflow path
+   */
+  void defineDax(String path) throws IOException;
+
+  /**
    * Deletes a file or a directory.
    *
    * @param path the path to delete

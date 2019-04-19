@@ -180,6 +180,19 @@ public class BaseFileSystem implements FileSystem {
   }
 
   @Override
+  public void defineDax(String path) throws IOException {
+    FileSystemMasterClient masterClient = mFileSystemContext.acquireMasterClient();
+    try {
+      masterClient.defineDax(path);
+      LOG.debug("Define DAX {}, ", path);
+    } catch (IOException e) {
+      throw e;
+    } finally {
+      mFileSystemContext.releaseMasterClient(masterClient);
+    }
+  }
+
+  @Override
   public void delete(AlluxioURI path)
       throws DirectoryNotEmptyException, FileDoesNotExistException, IOException, AlluxioException {
     delete(path, DeleteOptions.defaults());
@@ -659,7 +672,7 @@ public class BaseFileSystem implements FileSystem {
   public void setDataAccessPattern(String pattern, int tier, String target, long blockSize)
       throws Exception {
     String patternName = pattern.toLowerCase();
-    FileWriteLocationPolicy localgetLocationPolicy = new RoundRobinPolicy();;
+    FileWriteLocationPolicy localgetLocationPolicy = new RoundRobinPolicy();
     try {
       switch (patternName) {
         case  "pipeline" : {

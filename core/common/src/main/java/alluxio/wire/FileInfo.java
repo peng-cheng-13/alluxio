@@ -18,6 +18,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
+import java.util.Set;
+import java.util.Iterator;
+import java.util.Map;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -96,10 +99,10 @@ public final class FileInfo implements Serializable {
         mFileBlockInfos.add(new FileBlockInfo(fileBlockInfo));
       }
     }
-    if (fileInfo.getUKey() != null) {
+    if (fileInfo.getMUKey() != null) {
       mHasUDM = true;
-      List<String> keylist = fileInfo.getUKey();
-      List<String> valuelist = fileInfo.getUValue();
+      List<String> keylist = fileInfo.getMUKey();
+      List<String> valuelist = fileInfo.getMUKey();
       int i;
       for (i = 0; i < keylist.size(); i++) {
         mUDM.put(keylist.get(i), valuelist.get(i));
@@ -547,7 +550,18 @@ public final class FileInfo implements Serializable {
         mPersistenceState, mMountPoint, fileBlockInfos, ThriftUtils.toThrift(mTtlAction), mMountId,
         mInAlluxioPercentage);
     if (mHasUDM) {
-      info.setUDM(mUDM);
+      Set<Map.Entry<String, String>> entryset = mUDM.entrySet();
+      Iterator<Map.Entry<String, String>> it = entryset.iterator();
+      List<String> keylist = new ArrayList<>();
+      List<String> valuelist = new ArrayList<>();
+      while (it.hasNext()) {
+        Map.Entry<String, String> tmpmap = it.next();
+        keylist.add(tmpmap.getKey());
+        valuelist.add(tmpmap.getValue());
+      }
+      info.setMUKey(keylist);
+      info.setMUValue(valuelist);
+      info.setMUDM(true);
     }
     return info;
   }

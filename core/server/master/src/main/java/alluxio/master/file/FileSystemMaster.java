@@ -183,6 +183,15 @@ public interface FileSystemMaster extends Master {
       BlockInfoException, IOException, FileDoesNotExistException;
 
   /**
+   * Define workflow info.
+   * <p>
+   *
+   * @param path the path of workflow
+   * @throws IOException if something wrong
+   */
+  void defineDax(String path) throws IOException;
+
+  /**
    * Reinitializes the blocks of an existing open file.
    *
    * @param path the path to the file

@@ -141,6 +141,17 @@ public final class RetryHandlingFileSystemMasterClient extends AbstractMasterCli
   }
 
   @Override
+  public void defineDax(final String path) throws IOException {
+    retryRPC(new RpcCallable<Void>() {
+      @Override
+      public Void call() throws TException {
+        mClient.defineDax(path);
+        return null;
+      }
+    });
+  }
+
+  @Override
   public synchronized void delete(final AlluxioURI path, final DeleteOptions options)
       throws IOException {
     retryRPC(new RpcCallable<Void>() {

@@ -38,6 +38,7 @@ import alluxio.thrift.CreateDirectoryTOptions;
 import alluxio.thrift.CreateDirectoryTResponse;
 import alluxio.thrift.CreateFileTOptions;
 import alluxio.thrift.CreateFileTResponse;
+import alluxio.thrift.DefineDaxTResponse;
 import alluxio.thrift.DeleteTOptions;
 import alluxio.thrift.DeleteTResponse;
 import alluxio.thrift.FileInfo;
@@ -176,6 +177,27 @@ public final class FileSystemMasterClientServiceHandler implements
       @Override
       public String toString() {
         return String.format("CreateFile: path=%s, options=%s", path, options);
+      }
+    });
+  }
+
+  @Override
+  public DefineDaxTResponse defineDax(final String path)
+      throws alluxio.thrift.AlluxioTException {
+    return RpcUtils.callAndLog(LOG, new RpcCallable<DefineDaxTResponse>() {
+      @Override
+      public DefineDaxTResponse call() {
+        try {
+          mFileSystemMaster.defineDax(path);
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+        return new DefineDaxTResponse();
+      }
+
+      @Override
+      public String toString() {
+        return String.format("DefineDax: path=%s", path);
       }
     });
   }

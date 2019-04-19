@@ -119,6 +119,13 @@ public interface FileSystem {
       throws FileAlreadyExistsException, InvalidPathException, IOException, AlluxioException;
 
   /**
+   * Define workflow info.
+   *
+   * @param path the path of the workflow
+   */
+  void defineDax(String path) throws IOException;
+
+  /**
    * Convenience method for {@link #delete(AlluxioURI, DeleteOptions)} with default options.
    *
    * @param path the path to delete in Alluxio space

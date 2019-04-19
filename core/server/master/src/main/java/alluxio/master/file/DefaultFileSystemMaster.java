@@ -1459,6 +1459,11 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
     }
   }
 
+  @Override
+  public void defineDax(String path) throws IOException {
+    LOG.info("Add workflow info: " + path);
+  }
+
   /**
    * Creates a file (not a directory) for a given path.
    * <p>
