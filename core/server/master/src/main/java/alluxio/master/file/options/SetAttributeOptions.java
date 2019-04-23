@@ -88,7 +88,9 @@ public final class SetAttributeOptions {
       mPath = options.getMPath();
       mUKey = options.getMUKey();
       mUValue = options.getMUValue();
-      mDeleteAttribute = options.mDeleteAttribute;
+      if (options.isSetMDeleteAttribute()) {
+        mDeleteAttribute = true;
+      }
     }
     if (options.isSetDataset()) {
       mHasH5Dataset = true;

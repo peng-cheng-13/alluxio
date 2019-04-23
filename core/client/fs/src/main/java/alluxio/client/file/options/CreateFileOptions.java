@@ -54,6 +54,7 @@ public final class CreateFileOptions {
   private ArrayList<String> mVarName;
   private ArrayList<String> mVarType;
   private boolean mIndex;
+  private boolean mAdaptiveStorage;
 
   /**
    * @return the default {@link CreateFileOptions}
@@ -80,6 +81,14 @@ public final class CreateFileOptions {
     mVarName = new ArrayList<String>();
     mVarType = new ArrayList<String>();
     mIndex = false;
+    mAdaptiveStorage = false;
+  }
+
+  /**
+   * Enable adaptive storage.
+   */
+  public void enableAdaptive() {
+    mAdaptiveStorage = true;
   }
 
   /**
@@ -373,6 +382,7 @@ public final class CreateFileOptions {
     options.setRecursive(mRecursive);
     options.setTtl(mTtl);
     options.setTtlAction(ThriftUtils.toThrift(mTtlAction));
+    options.setAdaptiveStorage(mAdaptiveStorage);
     if (mMode != null) {
       options.setMode(mMode.toShort());
     }

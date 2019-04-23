@@ -97,8 +97,16 @@ public interface FileSystemMasterClient extends Client {
    * Define workflow info.
    *
    * @param path the workflow path
+   * @param outputFile2Task the mapping of output to task
+   * @param output2InputFiles the mapping of output to input files
+   * @param taskType2Nums the mapping of task to num
+   * @param task2ChildNums the mapping of task to num of child
+   * @param output2OutputFiles the mapping of output to output files
    */
-  void defineDax(String path) throws IOException;
+  void defineDax(String path, Map<String, String> outputFile2Task,
+      Map<String, List<String>> output2InputFiles, Map<String, Integer> taskType2Nums,
+      Map<String, Integer> task2ChildNums, Map<String, String> output2OutputFiles)
+      throws IOException;
 
   /**
    * Deletes a file or a directory.

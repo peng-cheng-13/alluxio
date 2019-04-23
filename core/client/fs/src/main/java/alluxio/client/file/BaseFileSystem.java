@@ -180,10 +180,14 @@ public class BaseFileSystem implements FileSystem {
   }
 
   @Override
-  public void defineDax(String path) throws IOException {
+  public void defineDax(String path, Map<String, String> outputFile2Task,
+      Map<String, List<String>> output2InputFiles, Map<String, Integer> taskType2Nums,
+      Map<String, Integer> task2ChildNums, Map<String, String> output2OutputFiles)
+      throws IOException {
     FileSystemMasterClient masterClient = mFileSystemContext.acquireMasterClient();
     try {
-      masterClient.defineDax(path);
+      masterClient.defineDax(path, outputFile2Task, output2InputFiles,
+          taskType2Nums, task2ChildNums, output2OutputFiles);
       LOG.debug("Define DAX {}, ", path);
     } catch (IOException e) {
       throw e;

@@ -30,6 +30,7 @@ struct CreateFileTOptions {
   4: optional i64 ttl
   5: optional i16 mode
   6: optional common.TTtlAction ttlAction
+  7: optional bool adaptiveStorage
 }
 struct CreateFileTResponse {}
 
@@ -253,6 +254,11 @@ service FileSystemMasterClientService extends common.AlluxioService {
    */
   DefineDaxTResponse defineDax(
     /** the path of dax file*/ 1: string path,
+    /** the parsed workflow: mOutputFile2Task*/ 2: map<string, string> mOutputFile2Task,
+    /**the parsed workflow: mOutput2InputFiles*/ 3: map<string, list<string>> mOutput2InputFiles,
+    /**the parsed workflow: mTaskType2Nums*/ 4: map<string, i32> mTaskType2Nums,
+    /**the parsed workflow: mTask2ChildNums*/ 5: map<string, i32> mTask2ChildNums,
+    /**the parsed workflow: mOutput2OutputFiles*/ 6: map<string, string> mOutput2OutputFiles,
     )
     throws (1: exception.AlluxioTException e)
 

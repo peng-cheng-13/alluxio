@@ -141,11 +141,15 @@ public final class RetryHandlingFileSystemMasterClient extends AbstractMasterCli
   }
 
   @Override
-  public void defineDax(final String path) throws IOException {
+  public void defineDax(final String path, final Map<String, String> outputFile2Task,
+      final Map<String, List<String>> output2InputFiles, final Map<String, Integer> taskType2Nums,
+      final Map<String, Integer> task2ChildNums, final Map<String, String> output2OutputFiles)
+      throws IOException {
     retryRPC(new RpcCallable<Void>() {
       @Override
       public Void call() throws TException {
-        mClient.defineDax(path);
+        mClient.defineDax(path, outputFile2Task, output2InputFiles, taskType2Nums,
+            task2ChildNums, output2OutputFiles);
         return null;
       }
     });

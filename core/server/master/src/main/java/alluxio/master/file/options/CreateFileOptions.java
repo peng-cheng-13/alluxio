@@ -33,6 +33,7 @@ public final class CreateFileOptions extends CreatePathOptions<CreateFileOptions
   private long mTtl;
   private TtlAction mTtlAction;
   private boolean mCacheable;
+  private boolean mAdaptiveStorage;
 
   /**
    * @return the default {@link CreateFileOptions}
@@ -63,6 +64,7 @@ public final class CreateFileOptions extends CreatePathOptions<CreateFileOptions
     } else {
       mMode.applyFileUMask();
     }
+    mAdaptiveStorage = options.isAdaptiveStorage();
   }
 
   private CreateFileOptions() {
@@ -72,6 +74,14 @@ public final class CreateFileOptions extends CreatePathOptions<CreateFileOptions
     mTtlAction = TtlAction.DELETE;
     mMode.applyFileUMask();
     mCacheable = false;
+    mAdaptiveStorage = false;
+  }
+
+  /**
+   * @return the adaptive storage flag
+   */
+  public boolean isAdaptiveStorage() {
+    return mAdaptiveStorage;
   }
 
   /**

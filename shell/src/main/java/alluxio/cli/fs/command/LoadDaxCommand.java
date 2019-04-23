@@ -18,14 +18,19 @@ import org.apache.commons.cli.CommandLine;
 
 import org.workflowsim.WorkflowParser;
 import org.workflowsim.Task;
+import org.workflowsim.FileItem;
 import org.workflowsim.utils.ClusteringParameters;
 import org.workflowsim.utils.OverheadParameters;
 import org.workflowsim.utils.Parameters;
 import org.workflowsim.utils.ReplicaCatalog;
+import org.workflowsim.utils.Parameters.FileType;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.Calendar;
 
 import javax.annotation.concurrent.ThreadSafe;
@@ -36,11 +41,23 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 public final class LoadDaxCommand extends AbstractFileSystemCommand {
 
+  /*Init data structure*/
+  private Map<String, String> mOutputFile2Task;
+  private Map<String, List<String>> mOutput2InputFiles;
+  private Map<String, String> mOutput2OutputFiles;
+  private Map<String, Integer> mTaskType2Nums;
+  private Map<String, Integer> mTask2ChildNums;
+
   /**
    * @param fs the filesystem of Alluxio
    */
   public LoadDaxCommand(FileSystem fs) {
     super(fs);
+    mOutputFile2Task = new HashMap<>();
+    mOutput2InputFiles = new HashMap<String, List<String>>();
+    mOutput2OutputFiles = new HashMap<>();
+    mTaskType2Nums = new HashMap<>();
+    mTask2ChildNums = new HashMap<>();
   }
 
   @Override
@@ -58,7 +75,8 @@ public final class LoadDaxCommand extends AbstractFileSystemCommand {
     String[] args = cl.getArgs();
     String daxPath = args[0];
     parseWorkflow(daxPath);
-    mFileSystem.defineDax(daxPath);
+    mFileSystem.defineDax(daxPath, mOutputFile2Task, mOutput2InputFiles,
+        mTaskType2Nums, mTask2ChildNums, mOutput2OutputFiles);
     System.out.println(daxPath + " has been parsed");
     return 0;
   }
@@ -97,10 +115,62 @@ public final class LoadDaxCommand extends AbstractFileSystemCommand {
     Calendar calendar = Calendar.getInstance();
     WorkflowParser tmpParser = new WorkflowParser(daxPath);
     tmpParser.parse();
-    List<Task> mtask = tmpParser.getTaskList();
-    int jobNum = mtask.size();
-    String tmpType = mtask.get(0).getType();
+    List<Task> taskList = tmpParser.getTaskList();
+    int jobNum = taskList.size();
+    String tmpType = taskList.get(0).getType();
     System.out.println("Current workflow has " + jobNum + " tasks, the first task is " + tmpType);
+
+    int tid;
+    /*Parse input workflow*/
+    for (tid = 0; tid < jobNum; tid++) {
+      int inputFileNum = 0;
+      int outputFileNum = 0;
+      int childNum = 0;
+      int typeNum = 0;
+      ArrayList<String> inputFileList = new ArrayList<>();
+      Task currentTask = taskList.get(tid);
+      String taskName = currentTask.getType();
+      /*Parse input and output files*/
+      List<FileItem> fileList = currentTask.getFileList();
+      for (FileItem file : fileList) {
+        /*Num of input files*/
+        if (file.getType() == FileType.INPUT) {
+          inputFileList.add(file.getName());
+          inputFileNum++;
+        } else if (file.getType() == FileType.OUTPUT) {
+          outputFileNum++;
+        }
+      }
+      /*In case that tasks has the same name but with different input file numbers*/
+      taskName = taskName + ":" + inputFileNum;
+      /*Mapping between each output file and task*/
+      int outputID = 0;
+      for (FileItem file : fileList) {
+        if (file.getType() == FileType.OUTPUT) {
+          mOutputFile2Task.put(file.getName(), taskName);
+          /*Mapping between each output file and their input file list*/
+          mOutput2InputFiles.put(file.getName(), inputFileList);
+          /*id of each putput file*/
+          String outinfo = String.valueOf(outputFileNum) + ":" + String.valueOf(outputID);
+          //System.out.println("Id of " + file.getName() + "is" + outinfo);
+          mOutput2OutputFiles.put(file.getName(), outinfo);
+          outputID++;
+        }
+      }
+
+      /*Num of tasks with the same type and same num of input files*/
+      if (!mTaskType2Nums.containsKey(taskName)) {
+        mTaskType2Nums.put(taskName, 1);
+      } else {
+        typeNum = mTaskType2Nums.get(taskName) + 1;
+        mTaskType2Nums.put(taskName, typeNum);
+      }
+      /*Mapping between task and num of childs*/
+      childNum = currentTask.getChildList().size();
+      if (!mTask2ChildNums.containsKey(taskName)) {
+        mTask2ChildNums.put(taskName, childNum);
+      }
+    }
   }
 
 }

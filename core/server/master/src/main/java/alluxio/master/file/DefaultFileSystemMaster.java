@@ -142,6 +142,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -159,6 +162,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.lang.Runtime;
+import java.lang.Process;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
@@ -285,6 +290,14 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
   //private HashStore mPathStore = null;
   private HashMap<String, Set> mPathStore = null;
 
+  /*Init data structure for adaptive storage*/
+  private Map<String, String> mOutputFile2Task;
+  private Map<String, List<String>> mOutput2InputFiles;
+  private Map<String, String> mOutput2OutputFiles;
+  private Map<String, Integer> mTaskType2Nums;
+  private Map<String, Integer> mTask2ChildNums;
+  private Map<String, Long> mFile2Size;
+
   /** Handle to the block master. */
   private final BlockMaster mBlockMaster;
 
@@ -390,6 +403,13 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
     mAsyncPersistHandler = AsyncPersistHandler.Factory.create(new FileSystemMasterView(this));
     mPermissionChecker = new PermissionChecker(mInodeTree);
     mUfsAbsentPathCache = UfsAbsentPathCache.Factory.create(mMountTable);
+
+    mOutputFile2Task = new HashMap<>();
+    mOutput2InputFiles = new HashMap<String, List<String>>();
+    mOutput2OutputFiles = new HashMap<>();
+    mTaskType2Nums = new HashMap<>();
+    mTask2ChildNums = new HashMap<>();
+    mFile2Size = new HashMap<>();
 
     resetState();
     Metrics.registerGauges(this, mUfsManager);
@@ -1371,6 +1391,13 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
     // determined by its size in Alluxio.
     long length = fileInode.isPersisted() ? options.getUfsLength() : inAlluxioLength;
 
+    /*If current file is taged to be used to enable adaptive storage*/
+    String fileName = inodePath.getUri().getName();
+    if (mFile2Size.containsKey(fileName)) {
+      mFile2Size.put(fileName, length);
+      LOG.info("Add file " + fileName + ", size is " + length);
+    }
+
     completeFileInternal(fileInode.getBlockIds(), inodePath, length, options.getOperationTimeMs(),
         false);
     CompleteFileEntry completeFileEntry =
@@ -1455,13 +1482,112 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
       mMountTable.checkUnderWritableMountPoint(path);
       createFileAndJournal(inodePath, options, journalContext);
       auditContext.setSrcInode(inodePath.getInode()).setSucceeded(true);
+      long tierID = 0;
+      if (options.isAdaptiveStorage()) {
+        tierID = predictTier(path);
+        return tierID;
+      }
       return inodePath.getInode().getId();
     }
   }
 
   @Override
-  public void defineDax(String path) throws IOException {
-    LOG.info("Add workflow info: " + path);
+  public void defineDax(String path, Map<String, String> outputFile2Task,
+      Map<String, List<String>> output2InputFiles, Map<String, Integer> taskType2Nums,
+      Map<String, Integer> task2ChildNums, Map<String, String> output2OutputFiles)
+      throws IOException {
+    mOutputFile2Task = outputFile2Task;
+    mOutput2InputFiles = output2InputFiles;
+    mTaskType2Nums = taskType2Nums;
+    mTask2ChildNums = task2ChildNums;
+    mOutput2OutputFiles = output2OutputFiles;
+    LOG.info("Add workflow info: " + path + ", mOutputFile2Task size is:"
+        + mOutputFile2Task.size() + ", mOutput2OutputFiles size is:"
+        + mOutput2OutputFiles.size());
+  }
+
+  /**
+   * Predict the target storage tier.
+   * @param path the file pathe
+   * @return the tier id
+   */
+  private long predictTier(AlluxioURI path) {
+    long rvalue = 0;
+    String filename = path.getName();
+    /*Add current file to in-memory hash map*/
+    mFile2Size.put(filename, 0L);
+    String tmpName = mOutputFile2Task.get(filename);
+    if (tmpName == null) {
+      LOG.info("Workflow info for file tmpName not found, return tier 0");
+      return 0;
+    }
+    String[] taskName = tmpName.split(":");
+    List<String> inputList = mOutput2InputFiles.get(filename);
+    long inputSize = 0L;
+    if (mFile2Size == null || inputList == null) {
+      LOG.info("File-size map is null Or inputlist is null");
+    } else {
+      for (String tmpinput : inputList) {
+        if (mFile2Size.get(tmpinput) != null) {
+          inputSize += mFile2Size.get(tmpinput);
+        } else {
+          LOG.info("failed to find " + tmpinput + " in in-memory hash table");
+        }
+      }
+    }
+    int taskNum = mTaskType2Nums.get(tmpName);
+    int childNum = mTask2ChildNums.get(tmpName);
+    int outPutNum = 1;
+    int outputId = 0;
+    String[] outputInfo = mOutput2OutputFiles.get(filename).split(":");
+    if (outputInfo != null) {
+      outPutNum = Integer.parseInt(outputInfo[0]);
+      outputId = Integer.parseInt(outputInfo[1]);
+    }
+    String storepath = Configuration.get(PropertyKey.MASTER_JOURNAL_FOLDER);
+    storepath = storepath + "/AdaptiveStorage" + "/CModel";
+
+    String command = storepath + " " + taskName[0] + " " + taskNum + " " + inputSize
+        + " " + outPutNum + " " + outputId + " " + childNum;
+
+    LOG.info("Predict with command: " + command);
+    InputStream fis = null;
+    InputStreamReader isr = null;
+    BufferedReader br = null;
+    try {
+      Runtime rt = Runtime.getRuntime();
+      Process proc = rt.exec(command);
+      if (proc == null) {
+        LOG.info("Failed to execute command " + command);
+      }
+      fis = proc.getInputStream();
+      isr = new InputStreamReader(fis);
+      br = new BufferedReader(isr);
+      String line = br.readLine();
+      if (line != null) {
+        rvalue = Long.parseLong(line);
+      }
+      LOG.info("Predicted storage tier: " + rvalue);
+    } catch (Throwable t) {
+      t.printStackTrace();
+    } finally {
+      try {
+        fis.close();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      try {
+        isr.close();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      try {
+        br.close();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+    return rvalue;
   }
 
   /**

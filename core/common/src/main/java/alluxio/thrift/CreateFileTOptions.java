@@ -44,6 +44,7 @@ public class CreateFileTOptions implements org.apache.thrift.TBase<CreateFileTOp
   private static final org.apache.thrift.protocol.TField TTL_FIELD_DESC = new org.apache.thrift.protocol.TField("ttl", org.apache.thrift.protocol.TType.I64, (short)4);
   private static final org.apache.thrift.protocol.TField MODE_FIELD_DESC = new org.apache.thrift.protocol.TField("mode", org.apache.thrift.protocol.TType.I16, (short)5);
   private static final org.apache.thrift.protocol.TField TTL_ACTION_FIELD_DESC = new org.apache.thrift.protocol.TField("ttlAction", org.apache.thrift.protocol.TType.I32, (short)6);
+  private static final org.apache.thrift.protocol.TField ADAPTIVE_STORAGE_FIELD_DESC = new org.apache.thrift.protocol.TField("adaptiveStorage", org.apache.thrift.protocol.TType.BOOL, (short)7);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -57,6 +58,7 @@ public class CreateFileTOptions implements org.apache.thrift.TBase<CreateFileTOp
   private long ttl; // optional
   private short mode; // optional
   private alluxio.thrift.TTtlAction ttlAction; // optional
+  private boolean adaptiveStorage; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -69,7 +71,8 @@ public class CreateFileTOptions implements org.apache.thrift.TBase<CreateFileTOp
      * 
      * @see alluxio.thrift.TTtlAction
      */
-    TTL_ACTION((short)6, "ttlAction");
+    TTL_ACTION((short)6, "ttlAction"),
+    ADAPTIVE_STORAGE((short)7, "adaptiveStorage");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -96,6 +99,8 @@ public class CreateFileTOptions implements org.apache.thrift.TBase<CreateFileTOp
           return MODE;
         case 6: // TTL_ACTION
           return TTL_ACTION;
+        case 7: // ADAPTIVE_STORAGE
+          return ADAPTIVE_STORAGE;
         default:
           return null;
       }
@@ -141,8 +146,9 @@ public class CreateFileTOptions implements org.apache.thrift.TBase<CreateFileTOp
   private static final int __RECURSIVE_ISSET_ID = 2;
   private static final int __TTL_ISSET_ID = 3;
   private static final int __MODE_ISSET_ID = 4;
+  private static final int __ADAPTIVESTORAGE_ISSET_ID = 5;
   private byte __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.BLOCK_SIZE_BYTES,_Fields.PERSISTED,_Fields.RECURSIVE,_Fields.TTL,_Fields.MODE,_Fields.TTL_ACTION};
+  private static final _Fields optionals[] = {_Fields.BLOCK_SIZE_BYTES,_Fields.PERSISTED,_Fields.RECURSIVE,_Fields.TTL,_Fields.MODE,_Fields.TTL_ACTION,_Fields.ADAPTIVE_STORAGE};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -158,6 +164,8 @@ public class CreateFileTOptions implements org.apache.thrift.TBase<CreateFileTOp
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I16)));
     tmpMap.put(_Fields.TTL_ACTION, new org.apache.thrift.meta_data.FieldMetaData("ttlAction", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.EnumMetaData(org.apache.thrift.protocol.TType.ENUM, alluxio.thrift.TTtlAction.class)));
+    tmpMap.put(_Fields.ADAPTIVE_STORAGE, new org.apache.thrift.meta_data.FieldMetaData("adaptiveStorage", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(CreateFileTOptions.class, metaDataMap);
   }
@@ -178,6 +186,7 @@ public class CreateFileTOptions implements org.apache.thrift.TBase<CreateFileTOp
     if (other.isSetTtlAction()) {
       this.ttlAction = other.ttlAction;
     }
+    this.adaptiveStorage = other.adaptiveStorage;
   }
 
   public CreateFileTOptions deepCopy() {
@@ -197,6 +206,8 @@ public class CreateFileTOptions implements org.apache.thrift.TBase<CreateFileTOp
     setModeIsSet(false);
     this.mode = 0;
     this.ttlAction = null;
+    setAdaptiveStorageIsSet(false);
+    this.adaptiveStorage = false;
   }
 
   public long getBlockSizeBytes() {
@@ -346,6 +357,29 @@ public class CreateFileTOptions implements org.apache.thrift.TBase<CreateFileTOp
     }
   }
 
+  public boolean isAdaptiveStorage() {
+    return this.adaptiveStorage;
+  }
+
+  public CreateFileTOptions setAdaptiveStorage(boolean adaptiveStorage) {
+    this.adaptiveStorage = adaptiveStorage;
+    setAdaptiveStorageIsSet(true);
+    return this;
+  }
+
+  public void unsetAdaptiveStorage() {
+    __isset_bitfield = EncodingUtils.clearBit(__isset_bitfield, __ADAPTIVESTORAGE_ISSET_ID);
+  }
+
+  /** Returns true if field adaptiveStorage is set (has been assigned a value) and false otherwise */
+  public boolean isSetAdaptiveStorage() {
+    return EncodingUtils.testBit(__isset_bitfield, __ADAPTIVESTORAGE_ISSET_ID);
+  }
+
+  public void setAdaptiveStorageIsSet(boolean value) {
+    __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __ADAPTIVESTORAGE_ISSET_ID, value);
+  }
+
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
     case BLOCK_SIZE_BYTES:
@@ -396,6 +430,14 @@ public class CreateFileTOptions implements org.apache.thrift.TBase<CreateFileTOp
       }
       break;
 
+    case ADAPTIVE_STORAGE:
+      if (value == null) {
+        unsetAdaptiveStorage();
+      } else {
+        setAdaptiveStorage((Boolean)value);
+      }
+      break;
+
     }
   }
 
@@ -418,6 +460,9 @@ public class CreateFileTOptions implements org.apache.thrift.TBase<CreateFileTOp
 
     case TTL_ACTION:
       return getTtlAction();
+
+    case ADAPTIVE_STORAGE:
+      return isAdaptiveStorage();
 
     }
     throw new IllegalStateException();
@@ -442,6 +487,8 @@ public class CreateFileTOptions implements org.apache.thrift.TBase<CreateFileTOp
       return isSetMode();
     case TTL_ACTION:
       return isSetTtlAction();
+    case ADAPTIVE_STORAGE:
+      return isSetAdaptiveStorage();
     }
     throw new IllegalStateException();
   }
@@ -513,6 +560,15 @@ public class CreateFileTOptions implements org.apache.thrift.TBase<CreateFileTOp
         return false;
     }
 
+    boolean this_present_adaptiveStorage = true && this.isSetAdaptiveStorage();
+    boolean that_present_adaptiveStorage = true && that.isSetAdaptiveStorage();
+    if (this_present_adaptiveStorage || that_present_adaptiveStorage) {
+      if (!(this_present_adaptiveStorage && that_present_adaptiveStorage))
+        return false;
+      if (this.adaptiveStorage != that.adaptiveStorage)
+        return false;
+    }
+
     return true;
   }
 
@@ -549,6 +605,11 @@ public class CreateFileTOptions implements org.apache.thrift.TBase<CreateFileTOp
     list.add(present_ttlAction);
     if (present_ttlAction)
       list.add(ttlAction.getValue());
+
+    boolean present_adaptiveStorage = true && (isSetAdaptiveStorage());
+    list.add(present_adaptiveStorage);
+    if (present_adaptiveStorage)
+      list.add(adaptiveStorage);
 
     return list.hashCode();
   }
@@ -621,6 +682,16 @@ public class CreateFileTOptions implements org.apache.thrift.TBase<CreateFileTOp
         return lastComparison;
       }
     }
+    lastComparison = Boolean.valueOf(isSetAdaptiveStorage()).compareTo(other.isSetAdaptiveStorage());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetAdaptiveStorage()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.adaptiveStorage, other.adaptiveStorage);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     return 0;
   }
 
@@ -678,6 +749,12 @@ public class CreateFileTOptions implements org.apache.thrift.TBase<CreateFileTOp
       } else {
         sb.append(this.ttlAction);
       }
+      first = false;
+    }
+    if (isSetAdaptiveStorage()) {
+      if (!first) sb.append(", ");
+      sb.append("adaptiveStorage:");
+      sb.append(this.adaptiveStorage);
       first = false;
     }
     sb.append(")");
@@ -773,6 +850,14 @@ public class CreateFileTOptions implements org.apache.thrift.TBase<CreateFileTOp
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 7: // ADAPTIVE_STORAGE
+            if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
+              struct.adaptiveStorage = iprot.readBool();
+              struct.setAdaptiveStorageIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -820,6 +905,11 @@ public class CreateFileTOptions implements org.apache.thrift.TBase<CreateFileTOp
           oprot.writeFieldEnd();
         }
       }
+      if (struct.isSetAdaptiveStorage()) {
+        oprot.writeFieldBegin(ADAPTIVE_STORAGE_FIELD_DESC);
+        oprot.writeBool(struct.adaptiveStorage);
+        oprot.writeFieldEnd();
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -856,7 +946,10 @@ public class CreateFileTOptions implements org.apache.thrift.TBase<CreateFileTOp
       if (struct.isSetTtlAction()) {
         optionals.set(5);
       }
-      oprot.writeBitSet(optionals, 6);
+      if (struct.isSetAdaptiveStorage()) {
+        optionals.set(6);
+      }
+      oprot.writeBitSet(optionals, 7);
       if (struct.isSetBlockSizeBytes()) {
         oprot.writeI64(struct.blockSizeBytes);
       }
@@ -875,12 +968,15 @@ public class CreateFileTOptions implements org.apache.thrift.TBase<CreateFileTOp
       if (struct.isSetTtlAction()) {
         oprot.writeI32(struct.ttlAction.getValue());
       }
+      if (struct.isSetAdaptiveStorage()) {
+        oprot.writeBool(struct.adaptiveStorage);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, CreateFileTOptions struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
-      BitSet incoming = iprot.readBitSet(6);
+      BitSet incoming = iprot.readBitSet(7);
       if (incoming.get(0)) {
         struct.blockSizeBytes = iprot.readI64();
         struct.setBlockSizeBytesIsSet(true);
@@ -904,6 +1000,10 @@ public class CreateFileTOptions implements org.apache.thrift.TBase<CreateFileTOp
       if (incoming.get(5)) {
         struct.ttlAction = alluxio.thrift.TTtlAction.findByValue(iprot.readI32());
         struct.setTtlActionIsSet(true);
+      }
+      if (incoming.get(6)) {
+        struct.adaptiveStorage = iprot.readBool();
+        struct.setAdaptiveStorageIsSet(true);
       }
     }
   }

@@ -182,13 +182,17 @@ public final class FileSystemMasterClientServiceHandler implements
   }
 
   @Override
-  public DefineDaxTResponse defineDax(final String path)
+  public DefineDaxTResponse defineDax(final String path, final Map<String, String> outputFile2Task,
+      final Map<String, List<String>> output2InputFiles,
+      final Map<String, Integer> taskType2Nums, final Map<String, Integer> task2ChildNums,
+      final Map<String, String> output2OutputFiles)
       throws alluxio.thrift.AlluxioTException {
     return RpcUtils.callAndLog(LOG, new RpcCallable<DefineDaxTResponse>() {
       @Override
       public DefineDaxTResponse call() {
         try {
-          mFileSystemMaster.defineDax(path);
+          mFileSystemMaster.defineDax(path, outputFile2Task, output2InputFiles,
+              taskType2Nums, task2ChildNums, output2OutputFiles);
         } catch (IOException e) {
           e.printStackTrace();
         }
