@@ -153,8 +153,9 @@ public class BaseFileSystem implements FileSystem {
       throws FileAlreadyExistsException, InvalidPathException, IOException, AlluxioException {
     FileSystemMasterClient masterClient = mFileSystemContext.acquireMasterClient();
     URIStatus status;
+    int tierID = 0;
     try {
-      masterClient.createFile(path, options);
+      tierID = (int) masterClient.createFile(path, options);
       status = masterClient.getStatus(path, GetStatusOptions.defaults().setLoadMetadataType(
           LoadMetadataType.Never));
       LOG.debug("Created file {}, options: {}", path.getPath(), options);
@@ -168,6 +169,9 @@ public class BaseFileSystem implements FileSystem {
       throw e.toAlluxioException();
     } finally {
       mFileSystemContext.releaseMasterClient(masterClient);
+    }
+    if (options.isSetAdaptive()) {
+      options.setWriteTier(tierID);
     }
     OutStreamOptions outStreamOptions = options.toOutStreamOptions();
     outStreamOptions.setUfsPath(status.getUfsPath());

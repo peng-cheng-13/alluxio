@@ -28,6 +28,7 @@ import alluxio.client.file.options.SetAttributeOptions;
 import alluxio.master.MasterClientConfig;
 import alluxio.thrift.AlluxioService;
 import alluxio.thrift.FileSystemMasterClientService;
+import alluxio.thrift.CreateFileTResponse;
 import alluxio.thrift.GetMountTableTResponse;
 import alluxio.thrift.GetNewBlockIdForFileTOptions;
 import alluxio.thrift.LoadMetadataTOptions;
@@ -117,13 +118,13 @@ public final class RetryHandlingFileSystemMasterClient extends AbstractMasterCli
   }
 
   @Override
-  public synchronized void createFile(final AlluxioURI path, final CreateFileOptions options)
+  public synchronized int createFile(final AlluxioURI path, final CreateFileOptions options)
       throws IOException {
-    retryRPC(new RpcCallable<Void>() {
+    return retryRPC(new RpcCallable<Integer>() {
       @Override
-      public Void call() throws TException {
-        mClient.createFile(path.getPath(), options.toThrift());
-        return null;
+      public Integer call() throws TException {
+        CreateFileTResponse cResponse = mClient.createFile(path.getPath(), options.toThrift());
+        return cResponse.getTierID();
       }
     });
   }

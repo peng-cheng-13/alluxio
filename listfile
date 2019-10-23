@@ -1,0 +1,9 @@
+core/common/src/thrift/file_system_master.thrift
+core/server/master/src/main/java/alluxio/master/file/FileSystemMasterClientServiceHandler.java
+core/server/master/src/main/java/alluxio/master/file/FileSystemMaster.java
+core/server/master/src/main/java/alluxio/master/file/DefaultFileSystemMaster.java
+core/client/fs/src/main/java/alluxio/client/file/FileSystemMasterClient.java
+core/client/fs/src/main/java/alluxio/client/file/RetryHandlingFileSystemMasterClient.java
+core/client/fs/src/main/java/alluxio/client/file/FileSystem.java
+core/client/fs/src/main/java/alluxio/client/file/BaseFileSystem.java
+

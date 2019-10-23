@@ -170,8 +170,16 @@ public final class FileSystemMasterClientServiceHandler implements
     return RpcUtils.callAndLog(LOG, new RpcCallableThrowsIOException<CreateFileTResponse>() {
       @Override
       public CreateFileTResponse call() throws AlluxioException, IOException {
-        mFileSystemMaster.createFile(new AlluxioURI(path), new CreateFileOptions(options));
-        return new CreateFileTResponse();
+        CreateFileOptions tmpOptions = new CreateFileOptions(options);
+        int tierID = 0;
+        if (options.isAdaptiveStorage()) {
+          tierID = (int) mFileSystemMaster.createFile(new AlluxioURI(path), tmpOptions);
+        } else {
+          mFileSystemMaster.createFile(new AlluxioURI(path), tmpOptions);
+        }
+        CreateFileTResponse cResponse = new CreateFileTResponse();
+        cResponse.setTierID(tierID);
+        return cResponse;
       }
 
       @Override

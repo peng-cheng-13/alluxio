@@ -1512,6 +1512,9 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
    * @return the tier id
    */
   private long predictTier(AlluxioURI path) {
+    long freeTier0 = (mBlockMaster.getTotalBytesOnTiers().get("MEM")
+        - mBlockMaster.getUsedBytesOnTiers().get("MEM")) / 1024 / 1024;
+    LOG.info("Mmeory tier available MBs : " + freeTier0);
     long rvalue = 0;
     String filename = path.getName();
     /*Add current file to in-memory hash map*/
@@ -1548,7 +1551,7 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
     storepath = storepath + "/AdaptiveStorage" + "/CModel";
 
     String command = storepath + " " + taskName[0] + " " + taskNum + " " + inputSize
-        + " " + outPutNum + " " + outputId + " " + childNum;
+        + " " + outPutNum + " " + outputId + " " + freeTier0 + " " + childNum;
 
     LOG.info("Predict with command: " + command);
     InputStream fis = null;

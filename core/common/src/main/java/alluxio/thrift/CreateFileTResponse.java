@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 public class CreateFileTResponse implements org.apache.thrift.TBase<CreateFileTResponse, CreateFileTResponse._Fields>, java.io.Serializable, Cloneable, Comparable<CreateFileTResponse> {
   private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("CreateFileTResponse");
 
+  private static final org.apache.thrift.protocol.TField TIER_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("tierID", org.apache.thrift.protocol.TType.I32, (short)1);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -45,10 +46,11 @@ public class CreateFileTResponse implements org.apache.thrift.TBase<CreateFileTR
     schemes.put(TupleScheme.class, new CreateFileTResponseTupleSchemeFactory());
   }
 
+  private int tierID; // required
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-;
+    TIER_ID((short)1, "tierID");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -63,6 +65,8 @@ public class CreateFileTResponse implements org.apache.thrift.TBase<CreateFileTR
      */
     public static _Fields findByThriftId(int fieldId) {
       switch(fieldId) {
+        case 1: // TIER_ID
+          return TIER_ID;
         default:
           return null;
       }
@@ -101,9 +105,15 @@ public class CreateFileTResponse implements org.apache.thrift.TBase<CreateFileTR
       return _fieldName;
     }
   }
+
+  // isset id assignments
+  private static final int __TIERID_ISSET_ID = 0;
+  private byte __isset_bitfield = 0;
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+    tmpMap.put(_Fields.TIER_ID, new org.apache.thrift.meta_data.FieldMetaData("tierID", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(CreateFileTResponse.class, metaDataMap);
   }
@@ -111,10 +121,20 @@ public class CreateFileTResponse implements org.apache.thrift.TBase<CreateFileTR
   public CreateFileTResponse() {
   }
 
+  public CreateFileTResponse(
+    int tierID)
+  {
+    this();
+    this.tierID = tierID;
+    setTierIDIsSet(true);
+  }
+
   /**
    * Performs a deep copy on <i>other</i>.
    */
   public CreateFileTResponse(CreateFileTResponse other) {
+    __isset_bitfield = other.__isset_bitfield;
+    this.tierID = other.tierID;
   }
 
   public CreateFileTResponse deepCopy() {
@@ -123,15 +143,51 @@ public class CreateFileTResponse implements org.apache.thrift.TBase<CreateFileTR
 
   @Override
   public void clear() {
+    setTierIDIsSet(false);
+    this.tierID = 0;
+  }
+
+  public int getTierID() {
+    return this.tierID;
+  }
+
+  public CreateFileTResponse setTierID(int tierID) {
+    this.tierID = tierID;
+    setTierIDIsSet(true);
+    return this;
+  }
+
+  public void unsetTierID() {
+    __isset_bitfield = EncodingUtils.clearBit(__isset_bitfield, __TIERID_ISSET_ID);
+  }
+
+  /** Returns true if field tierID is set (has been assigned a value) and false otherwise */
+  public boolean isSetTierID() {
+    return EncodingUtils.testBit(__isset_bitfield, __TIERID_ISSET_ID);
+  }
+
+  public void setTierIDIsSet(boolean value) {
+    __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __TIERID_ISSET_ID, value);
   }
 
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
+    case TIER_ID:
+      if (value == null) {
+        unsetTierID();
+      } else {
+        setTierID((Integer)value);
+      }
+      break;
+
     }
   }
 
   public Object getFieldValue(_Fields field) {
     switch (field) {
+    case TIER_ID:
+      return getTierID();
+
     }
     throw new IllegalStateException();
   }
@@ -143,6 +199,8 @@ public class CreateFileTResponse implements org.apache.thrift.TBase<CreateFileTR
     }
 
     switch (field) {
+    case TIER_ID:
+      return isSetTierID();
     }
     throw new IllegalStateException();
   }
@@ -160,12 +218,26 @@ public class CreateFileTResponse implements org.apache.thrift.TBase<CreateFileTR
     if (that == null)
       return false;
 
+    boolean this_present_tierID = true;
+    boolean that_present_tierID = true;
+    if (this_present_tierID || that_present_tierID) {
+      if (!(this_present_tierID && that_present_tierID))
+        return false;
+      if (this.tierID != that.tierID)
+        return false;
+    }
+
     return true;
   }
 
   @Override
   public int hashCode() {
     List<Object> list = new ArrayList<Object>();
+
+    boolean present_tierID = true;
+    list.add(present_tierID);
+    if (present_tierID)
+      list.add(tierID);
 
     return list.hashCode();
   }
@@ -178,6 +250,16 @@ public class CreateFileTResponse implements org.apache.thrift.TBase<CreateFileTR
 
     int lastComparison = 0;
 
+    lastComparison = Boolean.valueOf(isSetTierID()).compareTo(other.isSetTierID());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetTierID()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.tierID, other.tierID);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     return 0;
   }
 
@@ -198,6 +280,9 @@ public class CreateFileTResponse implements org.apache.thrift.TBase<CreateFileTR
     StringBuilder sb = new StringBuilder("CreateFileTResponse(");
     boolean first = true;
 
+    sb.append("tierID:");
+    sb.append(this.tierID);
+    first = false;
     sb.append(")");
     return sb.toString();
   }
@@ -217,6 +302,8 @@ public class CreateFileTResponse implements org.apache.thrift.TBase<CreateFileTR
 
   private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
     try {
+      // it doesn't seem like you should have to do this, but java serialization is wacky, and doesn't call the default constructor.
+      __isset_bitfield = 0;
       read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
     } catch (org.apache.thrift.TException te) {
       throw new java.io.IOException(te);
@@ -241,6 +328,14 @@ public class CreateFileTResponse implements org.apache.thrift.TBase<CreateFileTR
           break;
         }
         switch (schemeField.id) {
+          case 1: // TIER_ID
+            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+              struct.tierID = iprot.readI32();
+              struct.setTierIDIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -256,6 +351,9 @@ public class CreateFileTResponse implements org.apache.thrift.TBase<CreateFileTR
       struct.validate();
 
       oprot.writeStructBegin(STRUCT_DESC);
+      oprot.writeFieldBegin(TIER_ID_FIELD_DESC);
+      oprot.writeI32(struct.tierID);
+      oprot.writeFieldEnd();
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -273,11 +371,24 @@ public class CreateFileTResponse implements org.apache.thrift.TBase<CreateFileTR
     @Override
     public void write(org.apache.thrift.protocol.TProtocol prot, CreateFileTResponse struct) throws org.apache.thrift.TException {
       TTupleProtocol oprot = (TTupleProtocol) prot;
+      BitSet optionals = new BitSet();
+      if (struct.isSetTierID()) {
+        optionals.set(0);
+      }
+      oprot.writeBitSet(optionals, 1);
+      if (struct.isSetTierID()) {
+        oprot.writeI32(struct.tierID);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, CreateFileTResponse struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
+      BitSet incoming = iprot.readBitSet(1);
+      if (incoming.get(0)) {
+        struct.tierID = iprot.readI32();
+        struct.setTierIDIsSet(true);
+      }
     }
   }
 

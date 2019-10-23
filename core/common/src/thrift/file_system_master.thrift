@@ -32,7 +32,9 @@ struct CreateFileTOptions {
   6: optional common.TTtlAction ttlAction
   7: optional bool adaptiveStorage
 }
-struct CreateFileTResponse {}
+struct CreateFileTResponse {
+  1: i32 tierID
+}
 
 struct DefineDaxTOptions{}
 struct DefineDaxTResponse {}

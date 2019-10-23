@@ -92,6 +92,13 @@ public final class CreateFileOptions {
   }
 
   /**
+   * @return whether adaptive storage is enabled
+   */
+  public boolean isSetAdaptive() {
+    return mAdaptiveStorage;
+  }
+
+  /**
    * Set file info to generate index.
    * @param varname the list contains the var name
    * @param vartype the list contains the var type

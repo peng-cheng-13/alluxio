@@ -81,9 +81,10 @@ public interface FileSystemMasterClient extends Client {
    *
    * @param path the file path
    * @param options method options
+   * @return the id of storage tier
    * @throws AlreadyExistsException if the file already exists
    */
-  void createFile(AlluxioURI path, CreateFileOptions options) throws IOException;
+  int createFile(AlluxioURI path, CreateFileOptions options) throws IOException;
 
   /**
    * Marks a file as completed.
