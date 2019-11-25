@@ -26,6 +26,7 @@ import javax.annotation.concurrent.NotThreadSafe;
 public final class GetStatusOptions {
   private LoadMetadataType mLoadMetadataType;
   private QueryInfo mQueryInfo;
+  private boolean mPrefetch;
   //boolean mQuery;
 
   /**
@@ -38,6 +39,7 @@ public final class GetStatusOptions {
   private GetStatusOptions() {
     mLoadMetadataType = LoadMetadataType.Once;
     mQueryInfo = null;
+    mPrefetch = false;
     //mQuery = false;
   }
 
@@ -56,6 +58,23 @@ public final class GetStatusOptions {
       mQueryInfo = new QueryInfo(options.getQuery_max(), options.getQuery_min(),
           options.getVarname(), options.isQuery_augmented());
     }
+    mPrefetch = options.isEnablePrefetch();
+  }
+
+  /**
+   * Disable prefetch.
+   * @return GetStatusOptions
+   */
+  public GetStatusOptions disablePrefetch() {
+    mPrefetch = false;
+    return this;
+  }
+
+  /**
+   * @return whether prefetch is enabled
+   */
+  public boolean prefetchEnabled() {
+    return mPrefetch;
   }
 
   /**

@@ -41,6 +41,7 @@ public final class OpenFileOptions {
   private int mMaxUfsReadConcurrency;
   /** The location policy to determine the worker location to serve UFS block reads. */
   private BlockLocationPolicy mUfsReadLocationPolicy;
+  private boolean mEnablePrefetch;
 
   /**
    * @return the default {@link InStreamOptions}
@@ -71,6 +72,23 @@ public final class OpenFileOptions {
     mUfsReadLocationPolicy = BlockLocationPolicy.Factory.create(blockLocationPolicyCreateOptions);
     mMaxUfsReadConcurrency =
         Configuration.getInt(PropertyKey.USER_UFS_BLOCK_READ_CONCURRENCY_MAX);
+    mEnablePrefetch = true;
+  }
+
+  /**
+   * Disable Prefetch.
+   * @return OpenFileOptions
+   */
+  public OpenFileOptions disablePrefetch() {
+    mEnablePrefetch = false;
+    return this;
+  }
+
+  /**
+   * @return whether prefetch is enabled
+   */
+  public boolean isPrefetchEnabled() {
+    return mEnablePrefetch;
   }
 
   /**

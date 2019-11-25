@@ -33,6 +33,7 @@ import javax.annotation.concurrent.NotThreadSafe;
 public final class GetStatusOptions {
   private LoadMetadataType mLoadMetadataType;
   private QueryInfo mQueryInfo;
+  private boolean mEnablePrefetch;
 
   /**
    * @return the default {@link GetStatusOptions}
@@ -45,6 +46,21 @@ public final class GetStatusOptions {
     mLoadMetadataType =
         Configuration.getEnum(PropertyKey.USER_FILE_METADATA_LOAD_TYPE, LoadMetadataType.class);
     mQueryInfo = null;
+    mEnablePrefetch = false;
+  }
+
+  /**
+   * Enable adaptive prefetch.
+   */
+  public void enablePrefetch() {
+    mEnablePrefetch = true;
+  }
+
+  /**
+   * @return whether adaptive prefetch is enabled
+   */
+  public boolean isPrefetchEnabled() {
+    return mEnablePrefetch;
   }
 
   /**
@@ -115,6 +131,7 @@ public final class GetStatusOptions {
       options.setQuery_min(mQueryInfo.getMinValue());
       options.setQuery_augmented(mQueryInfo.useAugmented());
     }
+    options.setEnablePrefetch(mEnablePrefetch);
     return options;
   }
 }

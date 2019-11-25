@@ -127,10 +127,13 @@ public interface FileSystem {
    * @param taskType2Nums the mapping of task to num
    * @param task2ChildNums the mapping of task to num of child
    * @param output2OutputFiles the mapping of output to output files
+   * @param task2FutureInputFiles the mapping of task to future input files
+   * @param inputFile2Job the mapping of input file to current task
    */
   void defineDax(String path, Map<String, String> outputFile2Task,
       Map<String, List<String>> output2InputFiles, Map<String, Integer> taskType2Nums,
-      Map<String, Integer> task2ChildNums, Map<String, String> output2OutputFiles)
+      Map<String, Integer> task2ChildNums, Map<String, String> output2OutputFiles,
+      Map<String, Set<String>> task2FutureInputFiles, Map<String, String> inputFile2Job)
       throws IOException;
 
   /**

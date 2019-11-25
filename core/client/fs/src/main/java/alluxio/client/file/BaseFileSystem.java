@@ -186,12 +186,13 @@ public class BaseFileSystem implements FileSystem {
   @Override
   public void defineDax(String path, Map<String, String> outputFile2Task,
       Map<String, List<String>> output2InputFiles, Map<String, Integer> taskType2Nums,
-      Map<String, Integer> task2ChildNums, Map<String, String> output2OutputFiles)
+      Map<String, Integer> task2ChildNums, Map<String, String> output2OutputFiles,
+      Map<String, Set<String>> task2FutureInputFiles, Map<String, String> inputFile2Job)
       throws IOException {
     FileSystemMasterClient masterClient = mFileSystemContext.acquireMasterClient();
     try {
       masterClient.defineDax(path, outputFile2Task, output2InputFiles,
-          taskType2Nums, task2ChildNums, output2OutputFiles);
+          taskType2Nums, task2ChildNums, output2OutputFiles, task2FutureInputFiles, inputFile2Job);
       LOG.debug("Define DAX {}, ", path);
     } catch (IOException e) {
       throw e;
@@ -409,7 +410,11 @@ public class BaseFileSystem implements FileSystem {
   @Override
   public FileInStream openFile(AlluxioURI path, OpenFileOptions options)
       throws FileDoesNotExistException, IOException, AlluxioException {
-    URIStatus status = getStatus(path);
+    GetStatusOptions goptions = GetStatusOptions.defaults();
+    if (options.isPrefetchEnabled()) {
+      goptions.enablePrefetch();
+    }
+    URIStatus status = getStatus(path, goptions);
     if (status.isFolder()) {
       throw new FileDoesNotExistException(
           ExceptionMessage.CANNOT_READ_DIRECTORY.getMessage(status.getName()));

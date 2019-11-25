@@ -92,8 +92,12 @@ public class FileSystemMasterClientService {
      * @param mTask2ChildNums the parsed workflow: mTask2ChildNums
      * 
      * @param mOutput2OutputFiles the parsed workflow: mOutput2OutputFiles
+     * 
+     * @param mTask2FutureInputFiles the parsed workflow: mTask2FutureInputFiles
+     * 
+     * @param mInputFile2Job the parsed workflow: mInputFile2Job
      */
-    public DefineDaxTResponse defineDax(String path, Map<String,String> mOutputFile2Task, Map<String,List<String>> mOutput2InputFiles, Map<String,Integer> mTaskType2Nums, Map<String,Integer> mTask2ChildNums, Map<String,String> mOutput2OutputFiles) throws alluxio.thrift.AlluxioTException, org.apache.thrift.TException;
+    public DefineDaxTResponse defineDax(String path, Map<String,String> mOutputFile2Task, Map<String,List<String>> mOutput2InputFiles, Map<String,Integer> mTaskType2Nums, Map<String,Integer> mTask2ChildNums, Map<String,String> mOutput2OutputFiles, Map<String,Set<String>> mTask2FutureInputFiles, Map<String,String> mInputFile2Job) throws alluxio.thrift.AlluxioTException, org.apache.thrift.TException;
 
     /**
      * Frees the given file or directory from Alluxio.
@@ -229,7 +233,7 @@ public class FileSystemMasterClientService {
 
     public void createFile(String path, CreateFileTOptions options, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
 
-    public void defineDax(String path, Map<String,String> mOutputFile2Task, Map<String,List<String>> mOutput2InputFiles, Map<String,Integer> mTaskType2Nums, Map<String,Integer> mTask2ChildNums, Map<String,String> mOutput2OutputFiles, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
+    public void defineDax(String path, Map<String,String> mOutputFile2Task, Map<String,List<String>> mOutput2InputFiles, Map<String,Integer> mTaskType2Nums, Map<String,Integer> mTask2ChildNums, Map<String,String> mOutput2OutputFiles, Map<String,Set<String>> mTask2FutureInputFiles, Map<String,String> mInputFile2Job, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
 
     public void free(String path, boolean recursive, FreeTOptions options, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
 
@@ -385,13 +389,13 @@ public class FileSystemMasterClientService {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "createFile failed: unknown result");
     }
 
-    public DefineDaxTResponse defineDax(String path, Map<String,String> mOutputFile2Task, Map<String,List<String>> mOutput2InputFiles, Map<String,Integer> mTaskType2Nums, Map<String,Integer> mTask2ChildNums, Map<String,String> mOutput2OutputFiles) throws alluxio.thrift.AlluxioTException, org.apache.thrift.TException
+    public DefineDaxTResponse defineDax(String path, Map<String,String> mOutputFile2Task, Map<String,List<String>> mOutput2InputFiles, Map<String,Integer> mTaskType2Nums, Map<String,Integer> mTask2ChildNums, Map<String,String> mOutput2OutputFiles, Map<String,Set<String>> mTask2FutureInputFiles, Map<String,String> mInputFile2Job) throws alluxio.thrift.AlluxioTException, org.apache.thrift.TException
     {
-      send_defineDax(path, mOutputFile2Task, mOutput2InputFiles, mTaskType2Nums, mTask2ChildNums, mOutput2OutputFiles);
+      send_defineDax(path, mOutputFile2Task, mOutput2InputFiles, mTaskType2Nums, mTask2ChildNums, mOutput2OutputFiles, mTask2FutureInputFiles, mInputFile2Job);
       return recv_defineDax();
     }
 
-    public void send_defineDax(String path, Map<String,String> mOutputFile2Task, Map<String,List<String>> mOutput2InputFiles, Map<String,Integer> mTaskType2Nums, Map<String,Integer> mTask2ChildNums, Map<String,String> mOutput2OutputFiles) throws org.apache.thrift.TException
+    public void send_defineDax(String path, Map<String,String> mOutputFile2Task, Map<String,List<String>> mOutput2InputFiles, Map<String,Integer> mTaskType2Nums, Map<String,Integer> mTask2ChildNums, Map<String,String> mOutput2OutputFiles, Map<String,Set<String>> mTask2FutureInputFiles, Map<String,String> mInputFile2Job) throws org.apache.thrift.TException
     {
       defineDax_args args = new defineDax_args();
       args.setPath(path);
@@ -400,6 +404,8 @@ public class FileSystemMasterClientService {
       args.setMTaskType2Nums(mTaskType2Nums);
       args.setMTask2ChildNums(mTask2ChildNums);
       args.setMOutput2OutputFiles(mOutput2OutputFiles);
+      args.setMTask2FutureInputFiles(mTask2FutureInputFiles);
+      args.setMInputFile2Job(mInputFile2Job);
       sendBase("defineDax", args);
     }
 
@@ -901,9 +907,9 @@ public class FileSystemMasterClientService {
       }
     }
 
-    public void defineDax(String path, Map<String,String> mOutputFile2Task, Map<String,List<String>> mOutput2InputFiles, Map<String,Integer> mTaskType2Nums, Map<String,Integer> mTask2ChildNums, Map<String,String> mOutput2OutputFiles, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException {
+    public void defineDax(String path, Map<String,String> mOutputFile2Task, Map<String,List<String>> mOutput2InputFiles, Map<String,Integer> mTaskType2Nums, Map<String,Integer> mTask2ChildNums, Map<String,String> mOutput2OutputFiles, Map<String,Set<String>> mTask2FutureInputFiles, Map<String,String> mInputFile2Job, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      defineDax_call method_call = new defineDax_call(path, mOutputFile2Task, mOutput2InputFiles, mTaskType2Nums, mTask2ChildNums, mOutput2OutputFiles, resultHandler, this, ___protocolFactory, ___transport);
+      defineDax_call method_call = new defineDax_call(path, mOutputFile2Task, mOutput2InputFiles, mTaskType2Nums, mTask2ChildNums, mOutput2OutputFiles, mTask2FutureInputFiles, mInputFile2Job, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
@@ -915,7 +921,9 @@ public class FileSystemMasterClientService {
       private Map<String,Integer> mTaskType2Nums;
       private Map<String,Integer> mTask2ChildNums;
       private Map<String,String> mOutput2OutputFiles;
-      public defineDax_call(String path, Map<String,String> mOutputFile2Task, Map<String,List<String>> mOutput2InputFiles, Map<String,Integer> mTaskType2Nums, Map<String,Integer> mTask2ChildNums, Map<String,String> mOutput2OutputFiles, org.apache.thrift.async.AsyncMethodCallback resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      private Map<String,Set<String>> mTask2FutureInputFiles;
+      private Map<String,String> mInputFile2Job;
+      public defineDax_call(String path, Map<String,String> mOutputFile2Task, Map<String,List<String>> mOutput2InputFiles, Map<String,Integer> mTaskType2Nums, Map<String,Integer> mTask2ChildNums, Map<String,String> mOutput2OutputFiles, Map<String,Set<String>> mTask2FutureInputFiles, Map<String,String> mInputFile2Job, org.apache.thrift.async.AsyncMethodCallback resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.path = path;
         this.mOutputFile2Task = mOutputFile2Task;
@@ -923,6 +931,8 @@ public class FileSystemMasterClientService {
         this.mTaskType2Nums = mTaskType2Nums;
         this.mTask2ChildNums = mTask2ChildNums;
         this.mOutput2OutputFiles = mOutput2OutputFiles;
+        this.mTask2FutureInputFiles = mTask2FutureInputFiles;
+        this.mInputFile2Job = mInputFile2Job;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
@@ -934,6 +944,8 @@ public class FileSystemMasterClientService {
         args.setMTaskType2Nums(mTaskType2Nums);
         args.setMTask2ChildNums(mTask2ChildNums);
         args.setMOutput2OutputFiles(mOutput2OutputFiles);
+        args.setMTask2FutureInputFiles(mTask2FutureInputFiles);
+        args.setMInputFile2Job(mInputFile2Job);
         args.write(prot);
         prot.writeMessageEnd();
       }
@@ -1522,7 +1534,7 @@ public class FileSystemMasterClientService {
       public defineDax_result getResult(I iface, defineDax_args args) throws org.apache.thrift.TException {
         defineDax_result result = new defineDax_result();
         try {
-          result.success = iface.defineDax(args.path, args.mOutputFile2Task, args.mOutput2InputFiles, args.mTaskType2Nums, args.mTask2ChildNums, args.mOutput2OutputFiles);
+          result.success = iface.defineDax(args.path, args.mOutputFile2Task, args.mOutput2InputFiles, args.mTaskType2Nums, args.mTask2ChildNums, args.mOutput2OutputFiles, args.mTask2FutureInputFiles, args.mInputFile2Job);
         } catch (alluxio.thrift.AlluxioTException e) {
           result.e = e;
         }
@@ -2132,7 +2144,7 @@ public class FileSystemMasterClientService {
       }
 
       public void start(I iface, defineDax_args args, org.apache.thrift.async.AsyncMethodCallback<DefineDaxTResponse> resultHandler) throws TException {
-        iface.defineDax(args.path, args.mOutputFile2Task, args.mOutput2InputFiles, args.mTaskType2Nums, args.mTask2ChildNums, args.mOutput2OutputFiles,resultHandler);
+        iface.defineDax(args.path, args.mOutputFile2Task, args.mOutput2InputFiles, args.mTaskType2Nums, args.mTask2ChildNums, args.mOutput2OutputFiles, args.mTask2FutureInputFiles, args.mInputFile2Job,resultHandler);
       }
     }
 
@@ -6679,6 +6691,8 @@ public class FileSystemMasterClientService {
     private static final org.apache.thrift.protocol.TField M_TASK_TYPE2_NUMS_FIELD_DESC = new org.apache.thrift.protocol.TField("mTaskType2Nums", org.apache.thrift.protocol.TType.MAP, (short)4);
     private static final org.apache.thrift.protocol.TField M_TASK2_CHILD_NUMS_FIELD_DESC = new org.apache.thrift.protocol.TField("mTask2ChildNums", org.apache.thrift.protocol.TType.MAP, (short)5);
     private static final org.apache.thrift.protocol.TField M_OUTPUT2_OUTPUT_FILES_FIELD_DESC = new org.apache.thrift.protocol.TField("mOutput2OutputFiles", org.apache.thrift.protocol.TType.MAP, (short)6);
+    private static final org.apache.thrift.protocol.TField M_TASK2_FUTURE_INPUT_FILES_FIELD_DESC = new org.apache.thrift.protocol.TField("mTask2FutureInputFiles", org.apache.thrift.protocol.TType.MAP, (short)7);
+    private static final org.apache.thrift.protocol.TField M_INPUT_FILE2_JOB_FIELD_DESC = new org.apache.thrift.protocol.TField("mInputFile2Job", org.apache.thrift.protocol.TType.MAP, (short)8);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
@@ -6692,6 +6706,8 @@ public class FileSystemMasterClientService {
     private Map<String,Integer> mTaskType2Nums; // required
     private Map<String,Integer> mTask2ChildNums; // required
     private Map<String,String> mOutput2OutputFiles; // required
+    private Map<String,Set<String>> mTask2FutureInputFiles; // required
+    private Map<String,String> mInputFile2Job; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -6718,7 +6734,15 @@ public class FileSystemMasterClientService {
       /**
        * the parsed workflow: mOutput2OutputFiles
        */
-      M_OUTPUT2_OUTPUT_FILES((short)6, "mOutput2OutputFiles");
+      M_OUTPUT2_OUTPUT_FILES((short)6, "mOutput2OutputFiles"),
+      /**
+       * the parsed workflow: mTask2FutureInputFiles
+       */
+      M_TASK2_FUTURE_INPUT_FILES((short)7, "mTask2FutureInputFiles"),
+      /**
+       * the parsed workflow: mInputFile2Job
+       */
+      M_INPUT_FILE2_JOB((short)8, "mInputFile2Job");
 
       private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -6745,6 +6769,10 @@ public class FileSystemMasterClientService {
             return M_TASK2_CHILD_NUMS;
           case 6: // M_OUTPUT2_OUTPUT_FILES
             return M_OUTPUT2_OUTPUT_FILES;
+          case 7: // M_TASK2_FUTURE_INPUT_FILES
+            return M_TASK2_FUTURE_INPUT_FILES;
+          case 8: // M_INPUT_FILE2_JOB
+            return M_INPUT_FILE2_JOB;
           default:
             return null;
         }
@@ -6811,6 +6839,15 @@ public class FileSystemMasterClientService {
           new org.apache.thrift.meta_data.MapMetaData(org.apache.thrift.protocol.TType.MAP, 
               new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING), 
               new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
+      tmpMap.put(_Fields.M_TASK2_FUTURE_INPUT_FILES, new org.apache.thrift.meta_data.FieldMetaData("mTask2FutureInputFiles", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.MapMetaData(org.apache.thrift.protocol.TType.MAP, 
+              new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING), 
+              new org.apache.thrift.meta_data.SetMetaData(org.apache.thrift.protocol.TType.SET, 
+                  new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)))));
+      tmpMap.put(_Fields.M_INPUT_FILE2_JOB, new org.apache.thrift.meta_data.FieldMetaData("mInputFile2Job", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.MapMetaData(org.apache.thrift.protocol.TType.MAP, 
+              new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING), 
+              new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(defineDax_args.class, metaDataMap);
     }
@@ -6824,7 +6861,9 @@ public class FileSystemMasterClientService {
       Map<String,List<String>> mOutput2InputFiles,
       Map<String,Integer> mTaskType2Nums,
       Map<String,Integer> mTask2ChildNums,
-      Map<String,String> mOutput2OutputFiles)
+      Map<String,String> mOutput2OutputFiles,
+      Map<String,Set<String>> mTask2FutureInputFiles,
+      Map<String,String> mInputFile2Job)
     {
       this();
       this.path = path;
@@ -6833,6 +6872,8 @@ public class FileSystemMasterClientService {
       this.mTaskType2Nums = mTaskType2Nums;
       this.mTask2ChildNums = mTask2ChildNums;
       this.mOutput2OutputFiles = mOutput2OutputFiles;
+      this.mTask2FutureInputFiles = mTask2FutureInputFiles;
+      this.mInputFile2Job = mInputFile2Job;
     }
 
     /**
@@ -6873,6 +6914,25 @@ public class FileSystemMasterClientService {
         Map<String,String> __this__mOutput2OutputFiles = new HashMap<String,String>(other.mOutput2OutputFiles);
         this.mOutput2OutputFiles = __this__mOutput2OutputFiles;
       }
+      if (other.isSetMTask2FutureInputFiles()) {
+        Map<String,Set<String>> __this__mTask2FutureInputFiles = new HashMap<String,Set<String>>(other.mTask2FutureInputFiles.size());
+        for (Map.Entry<String, Set<String>> other_element : other.mTask2FutureInputFiles.entrySet()) {
+
+          String other_element_key = other_element.getKey();
+          Set<String> other_element_value = other_element.getValue();
+
+          String __this__mTask2FutureInputFiles_copy_key = other_element_key;
+
+          Set<String> __this__mTask2FutureInputFiles_copy_value = new HashSet<String>(other_element_value);
+
+          __this__mTask2FutureInputFiles.put(__this__mTask2FutureInputFiles_copy_key, __this__mTask2FutureInputFiles_copy_value);
+        }
+        this.mTask2FutureInputFiles = __this__mTask2FutureInputFiles;
+      }
+      if (other.isSetMInputFile2Job()) {
+        Map<String,String> __this__mInputFile2Job = new HashMap<String,String>(other.mInputFile2Job);
+        this.mInputFile2Job = __this__mInputFile2Job;
+      }
     }
 
     public defineDax_args deepCopy() {
@@ -6887,6 +6947,8 @@ public class FileSystemMasterClientService {
       this.mTaskType2Nums = null;
       this.mTask2ChildNums = null;
       this.mOutput2OutputFiles = null;
+      this.mTask2FutureInputFiles = null;
+      this.mInputFile2Job = null;
     }
 
     /**
@@ -7124,6 +7186,88 @@ public class FileSystemMasterClientService {
       }
     }
 
+    public int getMTask2FutureInputFilesSize() {
+      return (this.mTask2FutureInputFiles == null) ? 0 : this.mTask2FutureInputFiles.size();
+    }
+
+    public void putToMTask2FutureInputFiles(String key, Set<String> val) {
+      if (this.mTask2FutureInputFiles == null) {
+        this.mTask2FutureInputFiles = new HashMap<String,Set<String>>();
+      }
+      this.mTask2FutureInputFiles.put(key, val);
+    }
+
+    /**
+     * the parsed workflow: mTask2FutureInputFiles
+     */
+    public Map<String,Set<String>> getMTask2FutureInputFiles() {
+      return this.mTask2FutureInputFiles;
+    }
+
+    /**
+     * the parsed workflow: mTask2FutureInputFiles
+     */
+    public defineDax_args setMTask2FutureInputFiles(Map<String,Set<String>> mTask2FutureInputFiles) {
+      this.mTask2FutureInputFiles = mTask2FutureInputFiles;
+      return this;
+    }
+
+    public void unsetMTask2FutureInputFiles() {
+      this.mTask2FutureInputFiles = null;
+    }
+
+    /** Returns true if field mTask2FutureInputFiles is set (has been assigned a value) and false otherwise */
+    public boolean isSetMTask2FutureInputFiles() {
+      return this.mTask2FutureInputFiles != null;
+    }
+
+    public void setMTask2FutureInputFilesIsSet(boolean value) {
+      if (!value) {
+        this.mTask2FutureInputFiles = null;
+      }
+    }
+
+    public int getMInputFile2JobSize() {
+      return (this.mInputFile2Job == null) ? 0 : this.mInputFile2Job.size();
+    }
+
+    public void putToMInputFile2Job(String key, String val) {
+      if (this.mInputFile2Job == null) {
+        this.mInputFile2Job = new HashMap<String,String>();
+      }
+      this.mInputFile2Job.put(key, val);
+    }
+
+    /**
+     * the parsed workflow: mInputFile2Job
+     */
+    public Map<String,String> getMInputFile2Job() {
+      return this.mInputFile2Job;
+    }
+
+    /**
+     * the parsed workflow: mInputFile2Job
+     */
+    public defineDax_args setMInputFile2Job(Map<String,String> mInputFile2Job) {
+      this.mInputFile2Job = mInputFile2Job;
+      return this;
+    }
+
+    public void unsetMInputFile2Job() {
+      this.mInputFile2Job = null;
+    }
+
+    /** Returns true if field mInputFile2Job is set (has been assigned a value) and false otherwise */
+    public boolean isSetMInputFile2Job() {
+      return this.mInputFile2Job != null;
+    }
+
+    public void setMInputFile2JobIsSet(boolean value) {
+      if (!value) {
+        this.mInputFile2Job = null;
+      }
+    }
+
     public void setFieldValue(_Fields field, Object value) {
       switch (field) {
       case PATH:
@@ -7174,6 +7318,22 @@ public class FileSystemMasterClientService {
         }
         break;
 
+      case M_TASK2_FUTURE_INPUT_FILES:
+        if (value == null) {
+          unsetMTask2FutureInputFiles();
+        } else {
+          setMTask2FutureInputFiles((Map<String,Set<String>>)value);
+        }
+        break;
+
+      case M_INPUT_FILE2_JOB:
+        if (value == null) {
+          unsetMInputFile2Job();
+        } else {
+          setMInputFile2Job((Map<String,String>)value);
+        }
+        break;
+
       }
     }
 
@@ -7196,6 +7356,12 @@ public class FileSystemMasterClientService {
 
       case M_OUTPUT2_OUTPUT_FILES:
         return getMOutput2OutputFiles();
+
+      case M_TASK2_FUTURE_INPUT_FILES:
+        return getMTask2FutureInputFiles();
+
+      case M_INPUT_FILE2_JOB:
+        return getMInputFile2Job();
 
       }
       throw new IllegalStateException();
@@ -7220,6 +7386,10 @@ public class FileSystemMasterClientService {
         return isSetMTask2ChildNums();
       case M_OUTPUT2_OUTPUT_FILES:
         return isSetMOutput2OutputFiles();
+      case M_TASK2_FUTURE_INPUT_FILES:
+        return isSetMTask2FutureInputFiles();
+      case M_INPUT_FILE2_JOB:
+        return isSetMInputFile2Job();
       }
       throw new IllegalStateException();
     }
@@ -7291,6 +7461,24 @@ public class FileSystemMasterClientService {
           return false;
       }
 
+      boolean this_present_mTask2FutureInputFiles = true && this.isSetMTask2FutureInputFiles();
+      boolean that_present_mTask2FutureInputFiles = true && that.isSetMTask2FutureInputFiles();
+      if (this_present_mTask2FutureInputFiles || that_present_mTask2FutureInputFiles) {
+        if (!(this_present_mTask2FutureInputFiles && that_present_mTask2FutureInputFiles))
+          return false;
+        if (!this.mTask2FutureInputFiles.equals(that.mTask2FutureInputFiles))
+          return false;
+      }
+
+      boolean this_present_mInputFile2Job = true && this.isSetMInputFile2Job();
+      boolean that_present_mInputFile2Job = true && that.isSetMInputFile2Job();
+      if (this_present_mInputFile2Job || that_present_mInputFile2Job) {
+        if (!(this_present_mInputFile2Job && that_present_mInputFile2Job))
+          return false;
+        if (!this.mInputFile2Job.equals(that.mInputFile2Job))
+          return false;
+      }
+
       return true;
     }
 
@@ -7327,6 +7515,16 @@ public class FileSystemMasterClientService {
       list.add(present_mOutput2OutputFiles);
       if (present_mOutput2OutputFiles)
         list.add(mOutput2OutputFiles);
+
+      boolean present_mTask2FutureInputFiles = true && (isSetMTask2FutureInputFiles());
+      list.add(present_mTask2FutureInputFiles);
+      if (present_mTask2FutureInputFiles)
+        list.add(mTask2FutureInputFiles);
+
+      boolean present_mInputFile2Job = true && (isSetMInputFile2Job());
+      list.add(present_mInputFile2Job);
+      if (present_mInputFile2Job)
+        list.add(mInputFile2Job);
 
       return list.hashCode();
     }
@@ -7399,6 +7597,26 @@ public class FileSystemMasterClientService {
           return lastComparison;
         }
       }
+      lastComparison = Boolean.valueOf(isSetMTask2FutureInputFiles()).compareTo(other.isSetMTask2FutureInputFiles());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetMTask2FutureInputFiles()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.mTask2FutureInputFiles, other.mTask2FutureInputFiles);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetMInputFile2Job()).compareTo(other.isSetMInputFile2Job());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetMInputFile2Job()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.mInputFile2Job, other.mInputFile2Job);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
       return 0;
     }
 
@@ -7464,6 +7682,22 @@ public class FileSystemMasterClientService {
         sb.append("null");
       } else {
         sb.append(this.mOutput2OutputFiles);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("mTask2FutureInputFiles:");
+      if (this.mTask2FutureInputFiles == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.mTask2FutureInputFiles);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("mInputFile2Job:");
+      if (this.mInputFile2Job == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.mInputFile2Job);
       }
       first = false;
       sb.append(")");
@@ -7627,6 +7861,56 @@ public class FileSystemMasterClientService {
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
               break;
+            case 7: // M_TASK2_FUTURE_INPUT_FILES
+              if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
+                {
+                  org.apache.thrift.protocol.TMap _map237 = iprot.readMapBegin();
+                  struct.mTask2FutureInputFiles = new HashMap<String,Set<String>>(2*_map237.size);
+                  String _key238;
+                  Set<String> _val239;
+                  for (int _i240 = 0; _i240 < _map237.size; ++_i240)
+                  {
+                    _key238 = iprot.readString();
+                    {
+                      org.apache.thrift.protocol.TSet _set241 = iprot.readSetBegin();
+                      _val239 = new HashSet<String>(2*_set241.size);
+                      String _elem242;
+                      for (int _i243 = 0; _i243 < _set241.size; ++_i243)
+                      {
+                        _elem242 = iprot.readString();
+                        _val239.add(_elem242);
+                      }
+                      iprot.readSetEnd();
+                    }
+                    struct.mTask2FutureInputFiles.put(_key238, _val239);
+                  }
+                  iprot.readMapEnd();
+                }
+                struct.setMTask2FutureInputFilesIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            case 8: // M_INPUT_FILE2_JOB
+              if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
+                {
+                  org.apache.thrift.protocol.TMap _map244 = iprot.readMapBegin();
+                  struct.mInputFile2Job = new HashMap<String,String>(2*_map244.size);
+                  String _key245;
+                  String _val246;
+                  for (int _i247 = 0; _i247 < _map244.size; ++_i247)
+                  {
+                    _key245 = iprot.readString();
+                    _val246 = iprot.readString();
+                    struct.mInputFile2Job.put(_key245, _val246);
+                  }
+                  iprot.readMapEnd();
+                }
+                struct.setMInputFile2JobIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
             default:
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
           }
@@ -7651,10 +7935,10 @@ public class FileSystemMasterClientService {
           oprot.writeFieldBegin(M_OUTPUT_FILE2_TASK_FIELD_DESC);
           {
             oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, struct.mOutputFile2Task.size()));
-            for (Map.Entry<String, String> _iter237 : struct.mOutputFile2Task.entrySet())
+            for (Map.Entry<String, String> _iter248 : struct.mOutputFile2Task.entrySet())
             {
-              oprot.writeString(_iter237.getKey());
-              oprot.writeString(_iter237.getValue());
+              oprot.writeString(_iter248.getKey());
+              oprot.writeString(_iter248.getValue());
             }
             oprot.writeMapEnd();
           }
@@ -7664,14 +7948,14 @@ public class FileSystemMasterClientService {
           oprot.writeFieldBegin(M_OUTPUT2_INPUT_FILES_FIELD_DESC);
           {
             oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.LIST, struct.mOutput2InputFiles.size()));
-            for (Map.Entry<String, List<String>> _iter238 : struct.mOutput2InputFiles.entrySet())
+            for (Map.Entry<String, List<String>> _iter249 : struct.mOutput2InputFiles.entrySet())
             {
-              oprot.writeString(_iter238.getKey());
+              oprot.writeString(_iter249.getKey());
               {
-                oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, _iter238.getValue().size()));
-                for (String _iter239 : _iter238.getValue())
+                oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, _iter249.getValue().size()));
+                for (String _iter250 : _iter249.getValue())
                 {
-                  oprot.writeString(_iter239);
+                  oprot.writeString(_iter250);
                 }
                 oprot.writeListEnd();
               }
@@ -7684,10 +7968,10 @@ public class FileSystemMasterClientService {
           oprot.writeFieldBegin(M_TASK_TYPE2_NUMS_FIELD_DESC);
           {
             oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.I32, struct.mTaskType2Nums.size()));
-            for (Map.Entry<String, Integer> _iter240 : struct.mTaskType2Nums.entrySet())
+            for (Map.Entry<String, Integer> _iter251 : struct.mTaskType2Nums.entrySet())
             {
-              oprot.writeString(_iter240.getKey());
-              oprot.writeI32(_iter240.getValue());
+              oprot.writeString(_iter251.getKey());
+              oprot.writeI32(_iter251.getValue());
             }
             oprot.writeMapEnd();
           }
@@ -7697,10 +7981,10 @@ public class FileSystemMasterClientService {
           oprot.writeFieldBegin(M_TASK2_CHILD_NUMS_FIELD_DESC);
           {
             oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.I32, struct.mTask2ChildNums.size()));
-            for (Map.Entry<String, Integer> _iter241 : struct.mTask2ChildNums.entrySet())
+            for (Map.Entry<String, Integer> _iter252 : struct.mTask2ChildNums.entrySet())
             {
-              oprot.writeString(_iter241.getKey());
-              oprot.writeI32(_iter241.getValue());
+              oprot.writeString(_iter252.getKey());
+              oprot.writeI32(_iter252.getValue());
             }
             oprot.writeMapEnd();
           }
@@ -7710,10 +7994,43 @@ public class FileSystemMasterClientService {
           oprot.writeFieldBegin(M_OUTPUT2_OUTPUT_FILES_FIELD_DESC);
           {
             oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, struct.mOutput2OutputFiles.size()));
-            for (Map.Entry<String, String> _iter242 : struct.mOutput2OutputFiles.entrySet())
+            for (Map.Entry<String, String> _iter253 : struct.mOutput2OutputFiles.entrySet())
             {
-              oprot.writeString(_iter242.getKey());
-              oprot.writeString(_iter242.getValue());
+              oprot.writeString(_iter253.getKey());
+              oprot.writeString(_iter253.getValue());
+            }
+            oprot.writeMapEnd();
+          }
+          oprot.writeFieldEnd();
+        }
+        if (struct.mTask2FutureInputFiles != null) {
+          oprot.writeFieldBegin(M_TASK2_FUTURE_INPUT_FILES_FIELD_DESC);
+          {
+            oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.SET, struct.mTask2FutureInputFiles.size()));
+            for (Map.Entry<String, Set<String>> _iter254 : struct.mTask2FutureInputFiles.entrySet())
+            {
+              oprot.writeString(_iter254.getKey());
+              {
+                oprot.writeSetBegin(new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRING, _iter254.getValue().size()));
+                for (String _iter255 : _iter254.getValue())
+                {
+                  oprot.writeString(_iter255);
+                }
+                oprot.writeSetEnd();
+              }
+            }
+            oprot.writeMapEnd();
+          }
+          oprot.writeFieldEnd();
+        }
+        if (struct.mInputFile2Job != null) {
+          oprot.writeFieldBegin(M_INPUT_FILE2_JOB_FIELD_DESC);
+          {
+            oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, struct.mInputFile2Job.size()));
+            for (Map.Entry<String, String> _iter256 : struct.mInputFile2Job.entrySet())
+            {
+              oprot.writeString(_iter256.getKey());
+              oprot.writeString(_iter256.getValue());
             }
             oprot.writeMapEnd();
           }
@@ -7755,31 +8072,37 @@ public class FileSystemMasterClientService {
         if (struct.isSetMOutput2OutputFiles()) {
           optionals.set(5);
         }
-        oprot.writeBitSet(optionals, 6);
+        if (struct.isSetMTask2FutureInputFiles()) {
+          optionals.set(6);
+        }
+        if (struct.isSetMInputFile2Job()) {
+          optionals.set(7);
+        }
+        oprot.writeBitSet(optionals, 8);
         if (struct.isSetPath()) {
           oprot.writeString(struct.path);
         }
         if (struct.isSetMOutputFile2Task()) {
           {
             oprot.writeI32(struct.mOutputFile2Task.size());
-            for (Map.Entry<String, String> _iter243 : struct.mOutputFile2Task.entrySet())
+            for (Map.Entry<String, String> _iter257 : struct.mOutputFile2Task.entrySet())
             {
-              oprot.writeString(_iter243.getKey());
-              oprot.writeString(_iter243.getValue());
+              oprot.writeString(_iter257.getKey());
+              oprot.writeString(_iter257.getValue());
             }
           }
         }
         if (struct.isSetMOutput2InputFiles()) {
           {
             oprot.writeI32(struct.mOutput2InputFiles.size());
-            for (Map.Entry<String, List<String>> _iter244 : struct.mOutput2InputFiles.entrySet())
+            for (Map.Entry<String, List<String>> _iter258 : struct.mOutput2InputFiles.entrySet())
             {
-              oprot.writeString(_iter244.getKey());
+              oprot.writeString(_iter258.getKey());
               {
-                oprot.writeI32(_iter244.getValue().size());
-                for (String _iter245 : _iter244.getValue())
+                oprot.writeI32(_iter258.getValue().size());
+                for (String _iter259 : _iter258.getValue())
                 {
-                  oprot.writeString(_iter245);
+                  oprot.writeString(_iter259);
                 }
               }
             }
@@ -7788,30 +8111,56 @@ public class FileSystemMasterClientService {
         if (struct.isSetMTaskType2Nums()) {
           {
             oprot.writeI32(struct.mTaskType2Nums.size());
-            for (Map.Entry<String, Integer> _iter246 : struct.mTaskType2Nums.entrySet())
+            for (Map.Entry<String, Integer> _iter260 : struct.mTaskType2Nums.entrySet())
             {
-              oprot.writeString(_iter246.getKey());
-              oprot.writeI32(_iter246.getValue());
+              oprot.writeString(_iter260.getKey());
+              oprot.writeI32(_iter260.getValue());
             }
           }
         }
         if (struct.isSetMTask2ChildNums()) {
           {
             oprot.writeI32(struct.mTask2ChildNums.size());
-            for (Map.Entry<String, Integer> _iter247 : struct.mTask2ChildNums.entrySet())
+            for (Map.Entry<String, Integer> _iter261 : struct.mTask2ChildNums.entrySet())
             {
-              oprot.writeString(_iter247.getKey());
-              oprot.writeI32(_iter247.getValue());
+              oprot.writeString(_iter261.getKey());
+              oprot.writeI32(_iter261.getValue());
             }
           }
         }
         if (struct.isSetMOutput2OutputFiles()) {
           {
             oprot.writeI32(struct.mOutput2OutputFiles.size());
-            for (Map.Entry<String, String> _iter248 : struct.mOutput2OutputFiles.entrySet())
+            for (Map.Entry<String, String> _iter262 : struct.mOutput2OutputFiles.entrySet())
             {
-              oprot.writeString(_iter248.getKey());
-              oprot.writeString(_iter248.getValue());
+              oprot.writeString(_iter262.getKey());
+              oprot.writeString(_iter262.getValue());
+            }
+          }
+        }
+        if (struct.isSetMTask2FutureInputFiles()) {
+          {
+            oprot.writeI32(struct.mTask2FutureInputFiles.size());
+            for (Map.Entry<String, Set<String>> _iter263 : struct.mTask2FutureInputFiles.entrySet())
+            {
+              oprot.writeString(_iter263.getKey());
+              {
+                oprot.writeI32(_iter263.getValue().size());
+                for (String _iter264 : _iter263.getValue())
+                {
+                  oprot.writeString(_iter264);
+                }
+              }
+            }
+          }
+        }
+        if (struct.isSetMInputFile2Job()) {
+          {
+            oprot.writeI32(struct.mInputFile2Job.size());
+            for (Map.Entry<String, String> _iter265 : struct.mInputFile2Job.entrySet())
+            {
+              oprot.writeString(_iter265.getKey());
+              oprot.writeString(_iter265.getValue());
             }
           }
         }
@@ -7820,94 +8169,133 @@ public class FileSystemMasterClientService {
       @Override
       public void read(org.apache.thrift.protocol.TProtocol prot, defineDax_args struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
-        BitSet incoming = iprot.readBitSet(6);
+        BitSet incoming = iprot.readBitSet(8);
         if (incoming.get(0)) {
           struct.path = iprot.readString();
           struct.setPathIsSet(true);
         }
         if (incoming.get(1)) {
           {
-            org.apache.thrift.protocol.TMap _map249 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-            struct.mOutputFile2Task = new HashMap<String,String>(2*_map249.size);
-            String _key250;
-            String _val251;
-            for (int _i252 = 0; _i252 < _map249.size; ++_i252)
+            org.apache.thrift.protocol.TMap _map266 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+            struct.mOutputFile2Task = new HashMap<String,String>(2*_map266.size);
+            String _key267;
+            String _val268;
+            for (int _i269 = 0; _i269 < _map266.size; ++_i269)
             {
-              _key250 = iprot.readString();
-              _val251 = iprot.readString();
-              struct.mOutputFile2Task.put(_key250, _val251);
+              _key267 = iprot.readString();
+              _val268 = iprot.readString();
+              struct.mOutputFile2Task.put(_key267, _val268);
             }
           }
           struct.setMOutputFile2TaskIsSet(true);
         }
         if (incoming.get(2)) {
           {
-            org.apache.thrift.protocol.TMap _map253 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.LIST, iprot.readI32());
-            struct.mOutput2InputFiles = new HashMap<String,List<String>>(2*_map253.size);
-            String _key254;
-            List<String> _val255;
-            for (int _i256 = 0; _i256 < _map253.size; ++_i256)
+            org.apache.thrift.protocol.TMap _map270 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.LIST, iprot.readI32());
+            struct.mOutput2InputFiles = new HashMap<String,List<String>>(2*_map270.size);
+            String _key271;
+            List<String> _val272;
+            for (int _i273 = 0; _i273 < _map270.size; ++_i273)
             {
-              _key254 = iprot.readString();
+              _key271 = iprot.readString();
               {
-                org.apache.thrift.protocol.TList _list257 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-                _val255 = new ArrayList<String>(_list257.size);
-                String _elem258;
-                for (int _i259 = 0; _i259 < _list257.size; ++_i259)
+                org.apache.thrift.protocol.TList _list274 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+                _val272 = new ArrayList<String>(_list274.size);
+                String _elem275;
+                for (int _i276 = 0; _i276 < _list274.size; ++_i276)
                 {
-                  _elem258 = iprot.readString();
-                  _val255.add(_elem258);
+                  _elem275 = iprot.readString();
+                  _val272.add(_elem275);
                 }
               }
-              struct.mOutput2InputFiles.put(_key254, _val255);
+              struct.mOutput2InputFiles.put(_key271, _val272);
             }
           }
           struct.setMOutput2InputFilesIsSet(true);
         }
         if (incoming.get(3)) {
           {
-            org.apache.thrift.protocol.TMap _map260 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.I32, iprot.readI32());
-            struct.mTaskType2Nums = new HashMap<String,Integer>(2*_map260.size);
-            String _key261;
-            int _val262;
-            for (int _i263 = 0; _i263 < _map260.size; ++_i263)
+            org.apache.thrift.protocol.TMap _map277 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.I32, iprot.readI32());
+            struct.mTaskType2Nums = new HashMap<String,Integer>(2*_map277.size);
+            String _key278;
+            int _val279;
+            for (int _i280 = 0; _i280 < _map277.size; ++_i280)
             {
-              _key261 = iprot.readString();
-              _val262 = iprot.readI32();
-              struct.mTaskType2Nums.put(_key261, _val262);
+              _key278 = iprot.readString();
+              _val279 = iprot.readI32();
+              struct.mTaskType2Nums.put(_key278, _val279);
             }
           }
           struct.setMTaskType2NumsIsSet(true);
         }
         if (incoming.get(4)) {
           {
-            org.apache.thrift.protocol.TMap _map264 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.I32, iprot.readI32());
-            struct.mTask2ChildNums = new HashMap<String,Integer>(2*_map264.size);
-            String _key265;
-            int _val266;
-            for (int _i267 = 0; _i267 < _map264.size; ++_i267)
+            org.apache.thrift.protocol.TMap _map281 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.I32, iprot.readI32());
+            struct.mTask2ChildNums = new HashMap<String,Integer>(2*_map281.size);
+            String _key282;
+            int _val283;
+            for (int _i284 = 0; _i284 < _map281.size; ++_i284)
             {
-              _key265 = iprot.readString();
-              _val266 = iprot.readI32();
-              struct.mTask2ChildNums.put(_key265, _val266);
+              _key282 = iprot.readString();
+              _val283 = iprot.readI32();
+              struct.mTask2ChildNums.put(_key282, _val283);
             }
           }
           struct.setMTask2ChildNumsIsSet(true);
         }
         if (incoming.get(5)) {
           {
-            org.apache.thrift.protocol.TMap _map268 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-            struct.mOutput2OutputFiles = new HashMap<String,String>(2*_map268.size);
-            String _key269;
-            String _val270;
-            for (int _i271 = 0; _i271 < _map268.size; ++_i271)
+            org.apache.thrift.protocol.TMap _map285 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+            struct.mOutput2OutputFiles = new HashMap<String,String>(2*_map285.size);
+            String _key286;
+            String _val287;
+            for (int _i288 = 0; _i288 < _map285.size; ++_i288)
             {
-              _key269 = iprot.readString();
-              _val270 = iprot.readString();
-              struct.mOutput2OutputFiles.put(_key269, _val270);
+              _key286 = iprot.readString();
+              _val287 = iprot.readString();
+              struct.mOutput2OutputFiles.put(_key286, _val287);
             }
           }
           struct.setMOutput2OutputFilesIsSet(true);
+        }
+        if (incoming.get(6)) {
+          {
+            org.apache.thrift.protocol.TMap _map289 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.SET, iprot.readI32());
+            struct.mTask2FutureInputFiles = new HashMap<String,Set<String>>(2*_map289.size);
+            String _key290;
+            Set<String> _val291;
+            for (int _i292 = 0; _i292 < _map289.size; ++_i292)
+            {
+              _key290 = iprot.readString();
+              {
+                org.apache.thrift.protocol.TSet _set293 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+                _val291 = new HashSet<String>(2*_set293.size);
+                String _elem294;
+                for (int _i295 = 0; _i295 < _set293.size; ++_i295)
+                {
+                  _elem294 = iprot.readString();
+                  _val291.add(_elem294);
+                }
+              }
+              struct.mTask2FutureInputFiles.put(_key290, _val291);
+            }
+          }
+          struct.setMTask2FutureInputFilesIsSet(true);
+        }
+        if (incoming.get(7)) {
+          {
+            org.apache.thrift.protocol.TMap _map296 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+            struct.mInputFile2Job = new HashMap<String,String>(2*_map296.size);
+            String _key297;
+            String _val298;
+            for (int _i299 = 0; _i299 < _map296.size; ++_i299)
+            {
+              _key297 = iprot.readString();
+              _val298 = iprot.readString();
+              struct.mInputFile2Job.put(_key297, _val298);
+            }
+          }
+          struct.setMInputFile2JobIsSet(true);
         }
       }
     }

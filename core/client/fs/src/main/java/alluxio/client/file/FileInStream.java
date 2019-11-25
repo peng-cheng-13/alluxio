@@ -195,13 +195,13 @@ public class FileInStream extends InputStream
     if (remainingInternal() <= 0) {
       return -1;
     }
-    LOG.info("readInternal, Ready to create blockInStream");
+    //LOG.info("readInternal, Ready to create blockInStream");
     updateStreams();
-    LOG.info("readInternal, blockInStream created");
+    //LOG.info("readInternal, blockInStream created");
     Preconditions.checkState(mCurrentBlockInStream != null, PreconditionMessage.ERR_UNEXPECTED_EOF);
-    LOG.info("readInternal, Ready to read");
+    //LOG.info("readInternal, Ready to read");
     int data = mCurrentBlockInStream.read();
-    LOG.info("readInternal, read once");
+    //LOG.info("readInternal, read once");
     if (data == -1) {
       // The underlying stream is done.
       return -1;
@@ -227,6 +227,9 @@ public class FileInStream extends InputStream
     } else if (remainingInternal() <= 0) {
       return -1;
     }
+
+    LOG.info("Read from " + mStatus.getPath() + " once, size is " + len + ", offset is " + mPos
+        + ", BlockNum is " + (int) (mPos / mBlockSize));
 
     int currentOffset = off;
     int bytesLeftToRead = len;

@@ -164,6 +164,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.lang.Runtime;
 import java.lang.Process;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.net.Socket;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
@@ -296,6 +299,8 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
   private Map<String, String> mOutput2OutputFiles;
   private Map<String, Integer> mTaskType2Nums;
   private Map<String, Integer> mTask2ChildNums;
+  private Map<String, Set<String>> mTask2FutureInputFiles;
+  private Map<String, String> mInputFile2Job;
   private Map<String, Long> mFile2Size;
 
   /** Handle to the block master. */
@@ -355,6 +360,11 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
   private AsyncUserAccessAuditLogWriter mAsyncAuditLogWriter;
 
   /**
+   * Sent data prefetch request to Prefetch Thread.
+   */
+  private PrintWriter mPw;
+
+  /**
    * Creates a new instance of {@link DefaultFileSystemMaster}.
    *
    * @param blockMaster a block master handle
@@ -409,7 +419,17 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
     mOutput2OutputFiles = new HashMap<>();
     mTaskType2Nums = new HashMap<>();
     mTask2ChildNums = new HashMap<>();
+    mTask2FutureInputFiles = new HashMap<String, Set<String>>();
+    mInputFile2Job = new HashMap<>();
     mFile2Size = new HashMap<>();
+    try {
+      Socket socket = new Socket("localhost", 8889);
+      OutputStream os = socket.getOutputStream();
+      mPw = new PrintWriter(os);
+      LOG.info("Connect to Pretch Thread, port is 8899");
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
 
     resetState();
     Metrics.registerGauges(this, mUfsManager);
@@ -813,6 +833,41 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
         fileInfo = getFileInfoInternal(inodePath);
       }
       auditContext.setSrcInode(inodePath.getInode()).setSucceeded(true);
+
+      // If prefetch is enabled
+      if (options.prefetchEnabled()) {
+        String currentJobName = null;
+        int slash = path.getPath().lastIndexOf("/");
+        String stagePath = path.getPath().substring(0, slash);
+        if ((currentJobName = mInputFile2Job.get(path.getName())) != null) {
+          LOG.info("Input file is " + path + ", Job name is " + currentJobName);
+          for (String futureInputFile : mTask2FutureInputFiles.get(currentJobName)) {
+            AlluxioURI filePath = new AlluxioURI(stagePath + "/" + futureInputFile);
+            FileInfo prefetchfile = null;
+            try {
+              prefetchfile = getFileInfo(filePath, GetStatusOptions.defaults().disablePrefetch());
+            } catch (InvalidPathException e) {
+              LOG.info("Path " + stagePath + "/" + futureInputFile + " is invalid");
+              prefetchfile = null;
+            } catch (FileDoesNotExistException e) {
+              LOG.info("File " + stagePath + "/" + futureInputFile + " does not exist");
+              prefetchfile = null;
+              LOG.info("Set prefetchfile info to null");
+            }
+            // Prefetch file only if file is not cached in memory at all
+            LOG.info("Judge if prefetch file is in memory");
+            if (prefetchfile != null) {
+              if (prefetchfile.getInMemoryPercentage() == 0) {
+                mPw.write(stagePath + "/" + futureInputFile + "\n");
+                mPw.flush();
+              } else {
+                LOG.info("File " + stagePath + "/" + futureInputFile
+                    + " has been cached in memory tier");
+              }
+            }
+          }
+        }
+      }
       return fileInfo;
     }
   }
@@ -1494,13 +1549,16 @@ public final class DefaultFileSystemMaster extends AbstractMaster implements Fil
   @Override
   public void defineDax(String path, Map<String, String> outputFile2Task,
       Map<String, List<String>> output2InputFiles, Map<String, Integer> taskType2Nums,
-      Map<String, Integer> task2ChildNums, Map<String, String> output2OutputFiles)
+      Map<String, Integer> task2ChildNums, Map<String, String> output2OutputFiles,
+      Map<String, Set<String>> task2FutureInputFiles, Map<String, String> inputFile2Job)
       throws IOException {
     mOutputFile2Task = outputFile2Task;
     mOutput2InputFiles = output2InputFiles;
     mTaskType2Nums = taskType2Nums;
     mTask2ChildNums = task2ChildNums;
     mOutput2OutputFiles = output2OutputFiles;
+    mTask2FutureInputFiles = task2FutureInputFiles;
+    mInputFile2Job = inputFile2Job;
     LOG.info("Add workflow info: " + path + ", mOutputFile2Task size is:"
         + mOutputFile2Task.size() + ", mOutput2OutputFiles size is:"
         + mOutput2OutputFiles.size());

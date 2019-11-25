@@ -44,6 +44,7 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
   private static final org.apache.thrift.protocol.TField QUERY_MIN_FIELD_DESC = new org.apache.thrift.protocol.TField("query_min", org.apache.thrift.protocol.TType.DOUBLE, (short)4);
   private static final org.apache.thrift.protocol.TField IS_QUERY_FIELD_DESC = new org.apache.thrift.protocol.TField("isQuery", org.apache.thrift.protocol.TType.BOOL, (short)5);
   private static final org.apache.thrift.protocol.TField QUERY_AUGMENTED_FIELD_DESC = new org.apache.thrift.protocol.TField("query_augmented", org.apache.thrift.protocol.TType.BOOL, (short)6);
+  private static final org.apache.thrift.protocol.TField ENABLE_PREFETCH_FIELD_DESC = new org.apache.thrift.protocol.TField("enablePrefetch", org.apache.thrift.protocol.TType.BOOL, (short)7);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -57,6 +58,7 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
   private double query_min; // optional
   private boolean isQuery; // optional
   private boolean query_augmented; // optional
+  private boolean enablePrefetch; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -69,7 +71,8 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
     QUERY_MAX((short)3, "query_max"),
     QUERY_MIN((short)4, "query_min"),
     IS_QUERY((short)5, "isQuery"),
-    QUERY_AUGMENTED((short)6, "query_augmented");
+    QUERY_AUGMENTED((short)6, "query_augmented"),
+    ENABLE_PREFETCH((short)7, "enablePrefetch");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -96,6 +99,8 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
           return IS_QUERY;
         case 6: // QUERY_AUGMENTED
           return QUERY_AUGMENTED;
+        case 7: // ENABLE_PREFETCH
+          return ENABLE_PREFETCH;
         default:
           return null;
       }
@@ -140,8 +145,9 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
   private static final int __QUERY_MIN_ISSET_ID = 1;
   private static final int __ISQUERY_ISSET_ID = 2;
   private static final int __QUERY_AUGMENTED_ISSET_ID = 3;
+  private static final int __ENABLEPREFETCH_ISSET_ID = 4;
   private byte __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.LOAD_METADATA_TYPE,_Fields.VARNAME,_Fields.QUERY_MAX,_Fields.QUERY_MIN,_Fields.IS_QUERY,_Fields.QUERY_AUGMENTED};
+  private static final _Fields optionals[] = {_Fields.LOAD_METADATA_TYPE,_Fields.VARNAME,_Fields.QUERY_MAX,_Fields.QUERY_MIN,_Fields.IS_QUERY,_Fields.QUERY_AUGMENTED,_Fields.ENABLE_PREFETCH};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -156,6 +162,8 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
     tmpMap.put(_Fields.IS_QUERY, new org.apache.thrift.meta_data.FieldMetaData("isQuery", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
     tmpMap.put(_Fields.QUERY_AUGMENTED, new org.apache.thrift.meta_data.FieldMetaData("query_augmented", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
+    tmpMap.put(_Fields.ENABLE_PREFETCH, new org.apache.thrift.meta_data.FieldMetaData("enablePrefetch", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(GetStatusTOptions.class, metaDataMap);
@@ -179,6 +187,7 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
     this.query_min = other.query_min;
     this.isQuery = other.isQuery;
     this.query_augmented = other.query_augmented;
+    this.enablePrefetch = other.enablePrefetch;
   }
 
   public GetStatusTOptions deepCopy() {
@@ -197,6 +206,8 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
     this.isQuery = false;
     setQuery_augmentedIsSet(false);
     this.query_augmented = false;
+    setEnablePrefetchIsSet(false);
+    this.enablePrefetch = false;
   }
 
   /**
@@ -347,6 +358,29 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
     __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __QUERY_AUGMENTED_ISSET_ID, value);
   }
 
+  public boolean isEnablePrefetch() {
+    return this.enablePrefetch;
+  }
+
+  public GetStatusTOptions setEnablePrefetch(boolean enablePrefetch) {
+    this.enablePrefetch = enablePrefetch;
+    setEnablePrefetchIsSet(true);
+    return this;
+  }
+
+  public void unsetEnablePrefetch() {
+    __isset_bitfield = EncodingUtils.clearBit(__isset_bitfield, __ENABLEPREFETCH_ISSET_ID);
+  }
+
+  /** Returns true if field enablePrefetch is set (has been assigned a value) and false otherwise */
+  public boolean isSetEnablePrefetch() {
+    return EncodingUtils.testBit(__isset_bitfield, __ENABLEPREFETCH_ISSET_ID);
+  }
+
+  public void setEnablePrefetchIsSet(boolean value) {
+    __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __ENABLEPREFETCH_ISSET_ID, value);
+  }
+
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
     case LOAD_METADATA_TYPE:
@@ -397,6 +431,14 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
       }
       break;
 
+    case ENABLE_PREFETCH:
+      if (value == null) {
+        unsetEnablePrefetch();
+      } else {
+        setEnablePrefetch((Boolean)value);
+      }
+      break;
+
     }
   }
 
@@ -419,6 +461,9 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
 
     case QUERY_AUGMENTED:
       return isQuery_augmented();
+
+    case ENABLE_PREFETCH:
+      return isEnablePrefetch();
 
     }
     throw new IllegalStateException();
@@ -443,6 +488,8 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
       return isSetIsQuery();
     case QUERY_AUGMENTED:
       return isSetQuery_augmented();
+    case ENABLE_PREFETCH:
+      return isSetEnablePrefetch();
     }
     throw new IllegalStateException();
   }
@@ -514,6 +561,15 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
         return false;
     }
 
+    boolean this_present_enablePrefetch = true && this.isSetEnablePrefetch();
+    boolean that_present_enablePrefetch = true && that.isSetEnablePrefetch();
+    if (this_present_enablePrefetch || that_present_enablePrefetch) {
+      if (!(this_present_enablePrefetch && that_present_enablePrefetch))
+        return false;
+      if (this.enablePrefetch != that.enablePrefetch)
+        return false;
+    }
+
     return true;
   }
 
@@ -550,6 +606,11 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
     list.add(present_query_augmented);
     if (present_query_augmented)
       list.add(query_augmented);
+
+    boolean present_enablePrefetch = true && (isSetEnablePrefetch());
+    list.add(present_enablePrefetch);
+    if (present_enablePrefetch)
+      list.add(enablePrefetch);
 
     return list.hashCode();
   }
@@ -622,6 +683,16 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
         return lastComparison;
       }
     }
+    lastComparison = Boolean.valueOf(isSetEnablePrefetch()).compareTo(other.isSetEnablePrefetch());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetEnablePrefetch()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.enablePrefetch, other.enablePrefetch);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     return 0;
   }
 
@@ -683,6 +754,12 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
       if (!first) sb.append(", ");
       sb.append("query_augmented:");
       sb.append(this.query_augmented);
+      first = false;
+    }
+    if (isSetEnablePrefetch()) {
+      if (!first) sb.append(", ");
+      sb.append("enablePrefetch:");
+      sb.append(this.enablePrefetch);
       first = false;
     }
     sb.append(")");
@@ -778,6 +855,14 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 7: // ENABLE_PREFETCH
+            if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
+              struct.enablePrefetch = iprot.readBool();
+              struct.setEnablePrefetchIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -827,6 +912,11 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
         oprot.writeBool(struct.query_augmented);
         oprot.writeFieldEnd();
       }
+      if (struct.isSetEnablePrefetch()) {
+        oprot.writeFieldBegin(ENABLE_PREFETCH_FIELD_DESC);
+        oprot.writeBool(struct.enablePrefetch);
+        oprot.writeFieldEnd();
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -863,7 +953,10 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
       if (struct.isSetQuery_augmented()) {
         optionals.set(5);
       }
-      oprot.writeBitSet(optionals, 6);
+      if (struct.isSetEnablePrefetch()) {
+        optionals.set(6);
+      }
+      oprot.writeBitSet(optionals, 7);
       if (struct.isSetLoadMetadataType()) {
         oprot.writeI32(struct.loadMetadataType.getValue());
       }
@@ -882,12 +975,15 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
       if (struct.isSetQuery_augmented()) {
         oprot.writeBool(struct.query_augmented);
       }
+      if (struct.isSetEnablePrefetch()) {
+        oprot.writeBool(struct.enablePrefetch);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, GetStatusTOptions struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
-      BitSet incoming = iprot.readBitSet(6);
+      BitSet incoming = iprot.readBitSet(7);
       if (incoming.get(0)) {
         struct.loadMetadataType = alluxio.thrift.LoadMetadataTType.findByValue(iprot.readI32());
         struct.setLoadMetadataTypeIsSet(true);
@@ -911,6 +1007,10 @@ public class GetStatusTOptions implements org.apache.thrift.TBase<GetStatusTOpti
       if (incoming.get(5)) {
         struct.query_augmented = iprot.readBool();
         struct.setQuery_augmentedIsSet(true);
+      }
+      if (incoming.get(6)) {
+        struct.enablePrefetch = iprot.readBool();
+        struct.setEnablePrefetchIsSet(true);
       }
     }
   }

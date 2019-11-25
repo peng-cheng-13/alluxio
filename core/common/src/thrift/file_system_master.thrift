@@ -65,6 +65,7 @@ struct GetStatusTOptions {
   4: optional double query_min
   5: optional bool isQuery
   6: optional bool query_augmented
+  7: optional bool enablePrefetch
 }
 struct GetStatusTResponse {
   1: FileInfo fileInfo
@@ -261,6 +262,8 @@ service FileSystemMasterClientService extends common.AlluxioService {
     /**the parsed workflow: mTaskType2Nums*/ 4: map<string, i32> mTaskType2Nums,
     /**the parsed workflow: mTask2ChildNums*/ 5: map<string, i32> mTask2ChildNums,
     /**the parsed workflow: mOutput2OutputFiles*/ 6: map<string, string> mOutput2OutputFiles,
+    /**the parsed workflow: mTask2FutureInputFiles*/ 7: map<string, set<string>> mTask2FutureInputFiles,
+    /**the parsed workflow: mInputFile2Job*/ 8: map<string, string> mInputFile2Job,
     )
     throws (1: exception.AlluxioTException e)
 

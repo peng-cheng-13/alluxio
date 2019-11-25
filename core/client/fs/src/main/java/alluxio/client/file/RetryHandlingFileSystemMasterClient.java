@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -144,13 +145,15 @@ public final class RetryHandlingFileSystemMasterClient extends AbstractMasterCli
   @Override
   public void defineDax(final String path, final Map<String, String> outputFile2Task,
       final Map<String, List<String>> output2InputFiles, final Map<String, Integer> taskType2Nums,
-      final Map<String, Integer> task2ChildNums, final Map<String, String> output2OutputFiles)
+      final Map<String, Integer> task2ChildNums, final Map<String, String> output2OutputFiles,
+      final Map<String, Set<String>> task2FutureInputFiles,
+      final Map<String, String> inputFile2Job)
       throws IOException {
     retryRPC(new RpcCallable<Void>() {
       @Override
       public Void call() throws TException {
         mClient.defineDax(path, outputFile2Task, output2InputFiles, taskType2Nums,
-            task2ChildNums, output2OutputFiles);
+            task2ChildNums, output2OutputFiles, task2FutureInputFiles, inputFile2Job);
         return null;
       }
     });

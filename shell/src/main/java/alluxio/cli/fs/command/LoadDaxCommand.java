@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.Calendar;
 
 import javax.annotation.concurrent.ThreadSafe;
@@ -47,6 +49,8 @@ public final class LoadDaxCommand extends AbstractFileSystemCommand {
   private Map<String, String> mOutput2OutputFiles;
   private Map<String, Integer> mTaskType2Nums;
   private Map<String, Integer> mTask2ChildNums;
+  private Map<String, Set<String>> mTask2FutureInputFiles;
+  private Map<String, String> mInputFile2Job;
 
   /**
    * @param fs the filesystem of Alluxio
@@ -58,6 +62,8 @@ public final class LoadDaxCommand extends AbstractFileSystemCommand {
     mOutput2OutputFiles = new HashMap<>();
     mTaskType2Nums = new HashMap<>();
     mTask2ChildNums = new HashMap<>();
+    mTask2FutureInputFiles = new HashMap<String, Set<String>>();
+    mInputFile2Job = new HashMap<>();
   }
 
   @Override
@@ -76,8 +82,22 @@ public final class LoadDaxCommand extends AbstractFileSystemCommand {
     String daxPath = args[0];
     parseWorkflow(daxPath);
     mFileSystem.defineDax(daxPath, mOutputFile2Task, mOutput2InputFiles,
-        mTaskType2Nums, mTask2ChildNums, mOutput2OutputFiles);
+        mTaskType2Nums, mTask2ChildNums, mOutput2OutputFiles, mTask2FutureInputFiles,
+        mInputFile2Job);
     System.out.println(daxPath + " has been parsed");
+    /*
+    for (Map.Entry<String, Set<String>> entry : mTask2FutureInputFiles.entrySet()) {
+      String key = entry.getKey();
+      System.out.println("Futrue files of Task " + key + " is: ");
+      Set<String> valueList = entry.getValue();
+      for (String value : valueList) {
+        System.out.println("\t " + value);
+      }
+    }
+    */
+    for (Map.Entry<String, String> entry : mInputFile2Job.entrySet()) {
+      System.out.println("InputFile: " + entry.getKey() + ", JobName: " + entry.getValue());
+    }
     return 0;
   }
 
@@ -130,11 +150,15 @@ public final class LoadDaxCommand extends AbstractFileSystemCommand {
       ArrayList<String> inputFileList = new ArrayList<>();
       Task currentTask = taskList.get(tid);
       String taskName = currentTask.getType();
+      String jobName = taskName + "_" + tid;
       /*Parse input and output files*/
       List<FileItem> fileList = currentTask.getFileList();
       for (FileItem file : fileList) {
         /*Num of input files*/
         if (file.getType() == FileType.INPUT) {
+          if (!mInputFile2Job.containsKey(file.getName())) {
+            mInputFile2Job.put(file.getName(), jobName);
+          }
           inputFileList.add(file.getName());
           inputFileNum++;
         } else if (file.getType() == FileType.OUTPUT) {
@@ -170,6 +194,21 @@ public final class LoadDaxCommand extends AbstractFileSystemCommand {
       if (!mTask2ChildNums.containsKey(taskName)) {
         mTask2ChildNums.put(taskName, childNum);
       }
+
+      /*Mapping between task and future input files*/
+      HashSet<String> futureInputFileList = new HashSet<>();
+      List<Task> childList = currentTask.getChildList();
+      //System.out.println("Current task is " +  taskName);
+      for (Task childTask : childList) {
+        //System.out.println("\tchild is " + childTask.getType());
+        List<FileItem> childFileList = childTask.getFileList();
+        for (FileItem childFile : childFileList) {
+          if (childFile.getType() == FileType.INPUT) {
+            futureInputFileList.add(childFile.getName());
+          }
+        }
+      }
+      mTask2FutureInputFiles.put(jobName, futureInputFileList);
     }
   }
 
